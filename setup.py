@@ -2,9 +2,12 @@ from setuptools import setup
 
 setup(
     name='pyAS4',
-    version='1',
+    version='2',
     license='MIT',
     author='Andrii Shapovalov',
     author_email='mt.andrey@gmail.com',
-    description=''
+    description='',
+    packages=['pyAS4'],
+    package_data={'pyAS4': ['py.typed']},
+    zip_safe=False
 )
