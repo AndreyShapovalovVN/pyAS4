@@ -174,11 +174,12 @@ class Header:
         for payload in payloads:
             pl = etree.SubElement(self.pay_load_info, _nsmap('eb3', 'PartInfo'),
                                   attrib={'href': payload['href']})
-            etree.SubElement(pl, _nsmap('eb3', 'Property'),
+            pp = etree.SubElement(pl, _nsmap('eb3', 'PartProperties'),)
+            etree.SubElement(pp, _nsmap('eb3', 'Property'),
                              attrib={'name': "MimeType"},
                              text=payload['mimetype'])
             if payload.get('CompressionType', None):
-                etree.SubElement(pl, _nsmap('eb3', 'Property'),
+                etree.SubElement(pp, _nsmap('eb3', 'Property'),
                                  attrib={'name': "CompressionType"},
                                  text=payload['CompressionType'])
 
