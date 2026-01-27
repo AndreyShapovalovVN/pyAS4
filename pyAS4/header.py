@@ -6,11 +6,11 @@ _NS = {
     "query": "urn:oasis:names:tc:ebxml-regrep:xsd:query:4.0",
     "rs": "urn:oasis:names:tc:ebxml-regrep:xsd:rs:4.0",
     "rim": "urn:oasis:names:tc:ebxml-regrep:xsd:rim:4.0",
-    "xsi": "https://www.w3.org/2001/XMLSchema-instance",
-    "sdg": "https://data.europa.eu/sdg#",
-    "s12": "https://www.w3.org/2003/05/soap-envelope",
-    "eu": "https://eu.domibus.wsplugin/",
-    "eb3": "https://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/",
+    "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+    "sdg": "http://data.europa.eu/sdg#",
+    "s12": "http://www.w3.org/2003/05/soap-envelope",
+    "eu": "http://eu.domibus.wsplugin/",
+    "eb3": "http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/",
 }
 
 
