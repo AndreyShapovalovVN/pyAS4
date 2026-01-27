@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='pyAS4',
-    version='4',
+    version='5',
     license='MIT',
     author='Andrii Shapovalov',
     author_email='mt.andrey@gmail.com',

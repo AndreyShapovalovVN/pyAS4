@@ -124,34 +124,36 @@ class Header:
         froms = etree.SubElement(party_info, _nsmap('eb3', 'From'))
         etree.SubElement(froms, _nsmap('eb3', 'PartyId'),
                          attrib={'type': self.c2_party_id_type},
-                         text=self.c2_party_id)
-        etree.SubElement(froms, _nsmap('eb3', 'Role'), text=self.role)
+                         ).text=self.c2_party_id
+        etree.SubElement(froms, _nsmap('eb3', 'Role'),
+                         ).text=self.role
 
         to = etree.SubElement(party_info, _nsmap('eb3', 'To'))
         etree.SubElement(to, _nsmap('eb3', 'PartyId'),
                          attrib={'type': self.c3_party_id_type},
-                         text=self.c3_party_id)
-        etree.SubElement(to, _nsmap('eb3', 'Role'), text=self.role)
+                         ).text=self.c3_party_id
+        etree.SubElement(to, _nsmap('eb3', 'Role'),
+                         ).text=self.role
 
         collaboration_info = etree.SubElement(user_message, _nsmap('eb3', 'CollaborationInfo'))
         etree.SubElement(collaboration_info, _nsmap('eb3', 'Service'),
-                         text=self.service)
+                         ).text=self.service
         etree.SubElement(collaboration_info, _nsmap('eb3', 'Action'),
-                         test=self.action)
+                         ).text=self.action
         etree.SubElement(collaboration_info, _nsmap('eb3', 'ConversationId'),
-                         text=self.conversationid)
+                         ).text=self.conversationid
 
         message_proportis = etree.SubElement(user_message, _nsmap('eb3', 'MessageProperties'))
         etree.SubElement(message_proportis, _nsmap('eb3', 'Property'),
                          attrib={
                              'name': 'originalSender',
                              'type': self.c1_party_id_type},
-                         text=self.c1_party_id)
+                         ).text=self.c1_party_id
         etree.SubElement(message_proportis, _nsmap('eb3', 'Property'),
                          attrib={
                              'name': 'finalRecipient',
                              'type': self.c4_party_id_type},
-                         text=self.c4_party_id)
+                         ).text=self.c4_party_id
 
         pay_load_info = etree.SubElement(user_message, _nsmap('eb3', 'PayloadInfo'))
 
@@ -177,11 +179,11 @@ class Header:
             pp = etree.SubElement(pl, _nsmap('eb3', 'PartProperties'),)
             etree.SubElement(pp, _nsmap('eb3', 'Property'),
                              attrib={'name': "MimeType"},
-                             text=payload['mimetype'])
+                             ).text=payload['mimetype']
             if payload.get('CompressionType', None):
                 etree.SubElement(pp, _nsmap('eb3', 'Property'),
                                  attrib={'name': "CompressionType"},
-                                 text=payload['CompressionType'])
+                                 ).text=payload['CompressionType']
 
     @property
     def element(self) -> etree._Element:
