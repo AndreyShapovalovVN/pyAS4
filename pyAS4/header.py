@@ -54,10 +54,10 @@ class Header:
                  c4_party_id: str,
                  c4_party_id_type: str,
                  conversationid: str = str(uuid.uuid4()),
-                 service: str = "https://docs.oasis-open.org/ebxml-msg/as4/200902/service",
+                 service: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/service",
                  service_type: str = "urn:oasis:names:tc:ebcore:ebrs:ebms:binding:1.0",
-                 action: str = "https://docs.oasis-open.org/ebxml-msg/as4/200902/action",
-                 role: str = "https://sdg.europa.eu/edelivery/gateway"
+                 action: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/action",
+                 role: str = "http://sdg.europa.eu/edelivery/gateway"
                  ):
         """
         Initializes an instance of the class with required and optional attributes to configure
@@ -75,13 +75,13 @@ class Header:
         :param conversationid: (Optional) Unique identifier for the conversation thread.
             Defaults to a random UUID.
         :param service: (Optional) Service URL to describe the functionality invoked.
-            Defaults to "https://docs.oasis-open.org/ebxml-msg/as4/200902/service".
+            Defaults to "http://docs.oasis-open.org/ebxml-msg/as4/200902/service".
         :param service_type: (Optional) Specific type of the service provided.
             Defaults to "urn:oasis:names:tc:ebcore:ebrs:ebms:binding:1.0".
         :param action: (Optional) Action URL defining the invoked operation.
-            Defaults to "https://docs.oasis-open.org/ebxml-msg/as4/200902/action".
+            Defaults to "http://docs.oasis-open.org/ebxml-msg/as4/200902/action".
         :param role: (Optional) Role URL describing the role of the communicating party.
-            Defaults to "https://sdg.europa.eu/edelivery/gateway".
+            Defaults to "http://sdg.europa.eu/edelivery/gateway".
         :raises ValueError: If any of the mandatory `c1_party_id`, `c2_party_id`,
             `c3_party_id`, or `c4_party_id` parameters are None.
         """
