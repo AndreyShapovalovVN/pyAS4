@@ -137,6 +137,7 @@ class Header:
 
         collaboration_info = etree.SubElement(user_message, _nsmap('eb3', 'CollaborationInfo'))
         etree.SubElement(collaboration_info, _nsmap('eb3', 'Service'),
+                         type="urn:oasis:names:tc:ebcore:ebrs:ebms:binding:1.0",
                          ).text=self.service
         etree.SubElement(collaboration_info, _nsmap('eb3', 'Action'),
                          ).text=self.action
