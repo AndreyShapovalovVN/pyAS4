@@ -1,14 +1,17 @@
 import base64
 import logging
 import uuid
+from collections.abc import Iterator
 from io import BytesIO
+from typing import Any, cast
 
-# pyrefly: ignore [missing-import]
-from header import get_dict_header
 from pymtom_xop import MtomAttachment
 from zeep import Client, Settings, Transport
 from zeep.exceptions import Fault
 from zeep.plugins import HistoryPlugin
+
+# pyrefly: ignore [missing-import]
+from .header import get_dict_header
 
 _logger = logging.getLogger(__name__)
 
@@ -16,16 +19,12 @@ _logger = logging.getLogger(__name__)
 def _open_io(content: bytes | str, encoding_b64: bool = False) -> BytesIO:
     """Повертає `BytesIO` для payload; за потреби кодує вміст у base64."""
     _logger.debug(f"open_io - > {type(content)}")
-    if content is None:
-        raise ValueError("Content cannot be None")
-
-    if isinstance(content, str):
-        content: bytes = content.encode("utf-8")
+    data = content.encode("utf-8") if isinstance(content, str) else content
 
     if encoding_b64:
-        content: bytes = base64.b64encode(content)
+        data = base64.b64encode(data)
 
-    return BytesIO(content)
+    return BytesIO(data)
 
 
 def _norm_cid(cid: str | bytes) -> str:
@@ -55,8 +54,8 @@ def attachment(
     for file in files:
         attachments.append(
             MtomAttachment(
-                file=_open_io(file.get("content")),
-                content_type=file.get("content_type"),
+                file=_open_io(cast(str | bytes, file["content"])),
+                content_type=cast(str | None, file.get("content_type")),
                 cid=f"<{_norm_cid(file.get('cid', str(uuid.uuid4())))}>",
             )
         )
@@ -158,7 +157,7 @@ class AS4Receive(AS4Client):
             _logger.exception("Error receiving message")
             raise
 
-    def get_message(self) -> list[dict]:
+    def get_message(self) -> Iterator[dict[str, Any]]:
 
         for item in self._get_pending():
             message_id = getattr(item, "messageId", None) or str(item)
@@ -175,7 +174,7 @@ class AS4Receive(AS4Client):
                 _logger.exception(f"Error retrieving message {message_id}")
                 continue
 
-            message = {"messageId": message_id}
+            message: dict[str, Any] = {"messageId": message_id}
             message["header"] = get_dict_header(retrieved.header.ebMSHeaderInfo.UserMessage)
             message["payload"] = get_payload(message["header"], retrieved.body)
 
