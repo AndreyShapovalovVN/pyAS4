@@ -1,5 +1,4 @@
 # pyrefly: ignore [missing-import]
-import pytest
 
 from pyAS4.AS4Client import AS4Client
 

@@ -1,15 +1,12 @@
 import base64
 import logging
 import uuid
-from email import message
 from io import BytesIO
 
 # pyrefly: ignore [missing-import]
-from header import Header, get_dict_header
-from pymtom_xop import MtomAttachment, MtomTransport
-from requests import Session
+from header import get_dict_header
+from pymtom_xop import MtomAttachment
 from zeep import Client, Settings, Transport
-from zeep.cache import InMemoryCache
 from zeep.exceptions import Fault
 from zeep.plugins import HistoryPlugin
 
