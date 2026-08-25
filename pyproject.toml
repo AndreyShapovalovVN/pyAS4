@@ -12,7 +12,7 @@ requires-python = ">=3.12"
 dependencies = [
     "lxml>=6.1.1",
     "zeep>=4.3.3",
-    "pymtom_xop @ git+https://github.com/AndriyShapovalovVN/pymtom-xop.git",
+    "pymtom_xop @ git+https://github.com/AndreyShapovalovVN/pymtom-xop.git",
     "pyrefly>=0.60.0",
 ]
 [project.optional-dependencies]
