@@ -1,0 +1,10 @@
+lxml>=6.1.1
+zeep>=4.3.3
+pymtom_xop @ git+https://github.com/AndreyShapovalovVN/pymtom-xop.git
+pyrefly>=0.60.0
+
+[dev]
+pytest
+pytest-cov
+mypy
+ruff

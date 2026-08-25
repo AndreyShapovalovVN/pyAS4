@@ -22,3 +22,6 @@ dev = [
     "mypy",
     "ruff",
 ]
+
+[tool.ruff.lint]
+ignore = ["N999"]
