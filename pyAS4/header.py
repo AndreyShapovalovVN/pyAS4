@@ -10,9 +10,9 @@ _NS = {
     "rs": "urn:oasis:names:tc:ebxml-regrep:xsd:rs:4.0",
     "rim": "urn:oasis:names:tc:ebxml-regrep:xsd:rim:4.0",
     "xsi": "http://www.w3.org/2001/XMLSchema-instance",
-    "sdg": "http://data.europa.eu/sdg#",
+    "sdg": "http://data.europa.eu/sdg#", # NOSONAR
     "s12": "http://www.w3.org/2003/05/soap-envelope",
-    "eu": "http://eu.domibus.wsplugin/",
+    "eu": "http://eu.domibus.wsplugin/", # NOSONAR
     "eb3": "http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/",
 }
 
@@ -57,10 +57,10 @@ class Header:
                  c4_party_id: str,
                  c4_party_id_type: str,
                  conversationid: str = str(uuid.uuid4()),
-                 service: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/service",
+                 service: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/service",  #NOSONAR
                  service_type: str = "urn:oasis:names:tc:ebcore:ebrs:ebms:binding:1.0",
-                 action: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/action",
-                 role: str = "http://sdg.europa.eu/edelivery/gateway"
+                 action: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/action",  #NOSONAR
+                 role: str = "http://sdg.europa.eu/edelivery/gateway" #NOSONAR
                  ):
         """
         Initializes an instance of the class with required and optional attributes to configure
