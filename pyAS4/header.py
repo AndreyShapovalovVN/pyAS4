@@ -1,6 +1,9 @@
 import uuid
+import logging
 
 from lxml import etree
+
+_logger = logging.getLogger(__name__)
 
 _NS = {
     "query": "urn:oasis:names:tc:ebxml-regrep:xsd:query:4.0",
@@ -212,3 +215,51 @@ class Header:
         :rtype: Bytes
         """
         return etree.tostring(self.element, pretty_print=True)
+
+
+def get_dict_header(source_message) -> dict:
+    """
+    Перетворює заголовок повідомлення на словник для зручності обробки.
+    :param source_message:
+    :return:
+    """
+    headers = {
+        "messageId": source_message.MessageInfo.MessageId,
+        "timestamp": source_message.MessageInfo.Timestamp,
+        "Party": {
+            "From": {
+                "name": source_message.PartyInfo.From.PartyId._value_1,
+                "type": source_message.PartyInfo.From.PartyId.type,
+                "role": source_message.PartyInfo.From.Role,
+            },
+            "To": {
+                "name": source_message.PartyInfo.To.PartyId._value_1,
+                "type": source_message.PartyInfo.To.PartyId.type,
+                "role": source_message.PartyInfo.To.Role,
+            },
+        },
+        "CollaborationInfo": {
+            "service": source_message.CollaborationInfo.Service._value_1,
+            "serviceType": source_message.CollaborationInfo.Service.type,
+            "action": source_message.CollaborationInfo.Action,
+            "conversationId": source_message.CollaborationInfo.ConversationId,
+        },
+    }
+    parts = source_message.PayloadInfo.PartInfo
+    if isinstance(parts, list):
+        _logger.info(f"Received {len(parts)} parts in message")
+    else:
+        parts = [parts]
+        _logger.info("Received a single part in a message, wrapping in lists")
+
+    meta_parts = []
+    for part in parts:
+        m = {"href": part.href.strip('"')}
+
+        for proporty in part.PartProperties.Property:
+            m.update({proporty.name: proporty._value_1})
+
+        meta_parts.append(m)
+
+    headers["PayloadInfo"] = meta_parts
+    return headers

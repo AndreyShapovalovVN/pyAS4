@@ -4,9 +4,19 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyAS4"
-version = "8"
+version = "9"
 description = "Your package description"
 authors = [{ name="Andrey Shapovalov" }]
 readme = "README.md"
-requires-python = ">=3.10"
-dependencies = []
+requires-python = ">=3.12"
+dependencies = [
+    "lxml>=6.1.1",
+    "zeep>=4.3.3",
+    "pymtom_xop @ git+https://github.com/AndreyShapovalovVN/pymtom-xop.git",
+    "pyrefly>=0.60.0",
+]
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "twine>=4.0.2"
+]
