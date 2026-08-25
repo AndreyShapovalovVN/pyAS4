@@ -11,7 +11,8 @@ AS4-сумісними повідомленнями для систем елек
 
 pyAS4 надає удосконалений клієнт для роботи з AS4 веб-сервісами, включаючи:
 
-- **AS4Client** - розширений SOAP-клієнт з підтримкою ebXML AS4
+- **AS4Send** - клієнт для відправлення AS4-повідомлень
+- **AS4Receive** - клієнт для отримання AS4-повідомлень
 - **Header** - конструктор заголовків AS4 для керування метаданими повідомлень
 - Підтримка MTOM/XOP для передачі великих файлів
 - Управління party identifiers та service/action деталями
@@ -20,24 +21,22 @@ pyAS4 надає удосконалений клієнт для роботи з 
 Вимоги
 ------
 
-- Python >= 3.10
-- lxml >= 5.4.0
-- zeep (SOAP клієнт)
-- pymtom_xop (MTOM/XOP транспорт)
-- requests (HTTP сесії)
+- Python >= 3.12
+- lxml >= 6.1.1
+- zeep >= 4.3.3
 
 Встановлення
 -----------
 
-За допомогою pip::
+За допомогою uv::
 
-    pip install pyAS4
+    uv pip install pyAS4
 
 Або з вихідного коду::
 
     git clone <repository-url>
     cd pyAS4
-    pip install -e .
+    uv pip install -e .
 
 Використання
 -----------
@@ -47,16 +46,15 @@ pyAS4 надає удосконалений клієнт для роботи з 
 
 .. code-block:: python
 
-    from requests import Session
-    from pyAS4 import AS4Client
+    from zeep.plugins import HistoryPlugin
+    from pymtom_xop import MtomTransport
 
-    # Створіть HTTP сесію
-    session = Session()
+    from pyAS4.AS4Client import AS4Send
+    from pyAS4.header import Header
 
-    # Ініціалізуйте AS4 клієнт
-    client = AS4Client(
-        wsdl="http://example.com/as4-service?wsdl",
-        session=session,
+    # Створіть транспорт та заголовок
+    transport = MtomTransport()
+    header = Header(
         c1_party_id="party1-id",
         c1_party_id_type="urn:fdc:peppol.eu:2017:identifiers:C1",
         c2_party_id="party2-id",
@@ -66,7 +64,15 @@ pyAS4 надає удосконалений клієнт для роботи з 
         c4_party_id="party4-id",
         c4_party_id_type="urn:fdc:peppol.eu:2017:identifiers:C4",
         service_type="urn:oasis:names:tc:ebcore:ebrs:ebms:binding:1.0",
-        conversationid="my-conversation-id"
+        conversationid="my-conversation-id",
+    )
+
+    # Ініціалізуйте клієнт відправлення
+    client = AS4Send(
+        wsdl="http://example.com/as4-service?wsdl",
+        transport=transport,
+        plugins=[HistoryPlugin()],
+        header=header,
     )
 
 Відправлення повідомлень
@@ -76,35 +82,38 @@ pyAS4 надає удосконалений клієнт для роботи з 
 
     # Відправте повідомлення з вказаними корисними навантаженнями
     payloads = [
-        b"<xml>payload content</xml>"
+        {
+            "content": b"<xml>payload content</xml>",
+            "content_type": "application/xml",
+        }
     ]
 
-    client.submitMessage(payloads)
+    client.send_message(payloads)
 
 Отримання очікуючих повідомлень
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
-    # Отримайте список очікуючих повідомлень
-    pending_messages = client.listPendingMessages()
-    print(pending_messages)
+    from pyAS4.AS4Client import AS4Receive
 
-Отримання повідомлення за ID
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    receiver = AS4Receive(
+        wsdl="http://example.com/as4-service?wsdl",
+        transport=transport,
+        plugins=[HistoryPlugin()],
+        header=header,
+    )
 
-.. code-block:: python
-
-    # Отримайте конкретне повідомлення за його ID
-    message = client.retrieveMessage("message-id-123")
-    print(message)
+    # Отримайте очікуючі повідомлення
+    for message in receiver.receive_message():
+        print(message)
 
 Робота з заголовками AS4
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
-    from pyAS4 import Header
+    from pyAS4.header import Header
 
     # Створіть заголовок AS4
     header = Header(
@@ -130,21 +139,19 @@ pyAS4 надає удосконалений клієнт для роботи з 
     pyAS4/
     ├── pyAS4/
     │   ├── __init__.py           # Точка входу бібліотеки
-    │   ├── Communication.py      # AS4Client та сервіс комунікації
+    │   ├── AS4Client.py          # AS4Client, AS4Send та AS4Receive
     │   ├── header.py            # Header клас для керування AS4 заголовками
     │   └── py.typed             # Маркер для типізованої бібліотеки
     ├── README.rst               # Цей файл
     ├── pyproject.toml           # Конфігурація проєкту (PEP 517/518)
-    ├── setup.py                 # Скрипт встановлення
-    └── requirements.txt         # Залежності проєкту
+    └── uv.lock                  # Зафіксовані залежності для uv
 
 Архітектура
 -----------
 
-**AS4Client**
-    Розширена версія ZEEP Client, яка автоматично налаштовує MTOM/XOP транспорт
-    та керує конфігурацією ebXML AS4 повідомлень. Підтримує управління party identifiers
-    та сервісними деталями.
+**AS4Send / AS4Receive**
+    Базові клієнти для відправлення й отримання AS4-повідомлень через WSDL,
+    транспорт і AS4-заголовок.
 
 **Header**
     Клас для конструювання та керування ebXML AS4 заголовками повідомлень.
@@ -170,12 +177,12 @@ Andrey Shapovalov (mt.andrey@gmail.com)
 Ліцензія
 --------
 
-MIT License
+EUPL v1.2
 
 Поточна версія
 --------------
 
-8
+9
 
 Внески
 ------
@@ -193,4 +200,3 @@ MIT License
 Примітка: Бібліотека розроблена для роботи з системами електронної доставки,
 що відповідають стандартам OASIS ebXML AS4, та особливо для проєктів,
 що використовують PEPPOL мережу.
-
