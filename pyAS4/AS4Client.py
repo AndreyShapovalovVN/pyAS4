@@ -4,7 +4,7 @@ import uuid
 from io import BytesIO
 from typing import Generator
 
-from header import Header, get_dict_header
+from pyAS4.header import Header, get_dict_header
 from pymtom_xop import MtomAttachment, MtomTransport
 from zeep import Client, Settings, Transport
 from zeep.exceptions import Fault

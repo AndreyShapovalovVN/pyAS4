@@ -666,12 +666,13 @@ wheels = [
 
 [[package]]
 name = "pyas4"
-version = "0.1.11"
+version = "0.1.12"
 source = { editable = "." }
 dependencies = [
     { name = "lxml" },
     { name = "pymtom-xop" },
     { name = "pyrefly" },
+    { name = "pytest" },
     { name = "zeep" },
 ]
 
@@ -692,6 +693,7 @@ requires-dist = [
     { name = "pymtom-xop", git = "https://github.com/AndreyShapovalovVN/pymtom-xop.git" },
     { name = "pyrefly", specifier = ">=0.60.0" },
     { name = "pyrefly", marker = "extra == 'dev'", specifier = ">=0.60.0" },
+    { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.2.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23.7" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5.0.0" },
