@@ -2,8 +2,8 @@ import base64
 import logging
 import uuid
 from io import BytesIO
+from typing import Generator
 
-# pyrefly: ignore [missing-import]
 from header import Header, get_dict_header
 from pymtom_xop import MtomAttachment, MtomTransport
 from zeep import Client, Settings, Transport
@@ -25,6 +25,8 @@ def _open_io(content: bytes | str | None, encoding_b64: bool = False) -> BytesIO
 
     if encoding_b64:
         return BytesIO(base64.b64encode(content))
+    
+    return BytesIO(content)
 
 
 def _norm_cid(cid: str | bytes) -> str:
@@ -41,7 +43,7 @@ def _norm_cid(cid: str | bytes) -> str:
 
 
 def attachment(
-    files: list[dict[str, str | bytes]], attachments: list[MtomAttachment] | None = None
+        files: list[dict[str, str | bytes]], attachments: list[MtomAttachment] | None = None
 ) -> list[MtomAttachment]:
     """
     Додає вкладення до списку `attachments` на основі переданих файлів.
@@ -119,12 +121,13 @@ class AS4Client:
         requests through the client.
     :type header: Header
     """
+
     def __init__(
-        self,
-        wsdl: str,
-        transport: Transport,
-        plugins: list[HistoryPlugin],
-        header: Header,
+            self,
+            wsdl: str,
+            transport: Transport,
+            plugins: list[HistoryPlugin],
+            header: Header,
     ):
         self.wsdl = wsdl
         self.transport = transport
@@ -137,11 +140,11 @@ class AS4Client:
 
 class AS4Send(AS4Client):
     def __init__(
-        self,
-        wsdl: str,
-        transport: Transport,
-        plugins: list[HistoryPlugin],
-        header: Header,
+            self,
+            wsdl: str,
+            transport: Transport,
+            plugins: list[HistoryPlugin],
+            header: Header,
     ):
         """
         Initializes the client with a specific WSDL, transport, plugin list, and header.
@@ -185,13 +188,13 @@ class AS4Send(AS4Client):
             settings=self.settings,
             plugins=self.plugins,
         )
-        payload = self.client.get_type("ns0:LargePayloadType")
+        PayloadType = self.client.get_type("ns0:LargePayloadType")
         bodyload_obj = None
         payload_objs = []
 
         for idx, file in enumerate(attach):
             payload_id = f"cid:{_norm_cid(file.get_cid())}"
-            obj = payload(
+            obj = PayloadType(
                 value=file.get_cid(),
                 payloadId=payload_id,
                 contentType=file.content_type,
@@ -202,10 +205,10 @@ class AS4Send(AS4Client):
             payload_objs.append(obj)
         try:
             response = self.client.service.submitMessage(
-                    _soapheaders=[self.header.element],
-                    body=payload_objs,
-                    bodyload=bodyload_obj,
-                )
+                _soapheaders=[self.header.element],
+                body=payload_objs,
+                bodyload=bodyload_obj,
+            )
         except Fault:
             _logger.exception("SOAP Fault occurred while sending message")
             raise
@@ -216,15 +219,13 @@ class AS4Send(AS4Client):
         return response
 
 
-
-
 class AS4Receive(AS4Client):
     def __init__(
-        self,
-        wsdl: str,
-        transport: Transport,
-        plugins: list[HistoryPlugin],
-        header: Header,
+            self,
+            wsdl: str,
+            transport: Transport,
+            plugins: list[HistoryPlugin],
+            header: Header,
     ):
         """
         Initializes a new instance of the class.
@@ -260,6 +261,8 @@ class AS4Receive(AS4Client):
 
     def _get_pending(self) -> list:
         try:
+            if self.client is None:
+                raise RuntimeError("Client not initialized")
             response = self.client.service.listPendingMessages(
                 finalRecipient=self.header.c4_party_id
             )
@@ -272,17 +275,19 @@ class AS4Receive(AS4Client):
             _logger.exception("Error receiving message")
             raise
 
-    def receive_message(self) -> list[dict]:
+    def receive_message(self) -> Generator[dict, None, None]:
         """
         Retrieve and process messages.
 
-        Iterates over pending items and attempts to retrieve their corresponding messages via a SOAP service. Each retrieved message
-        is processed, extracting its header and payload. Log messages are generated for success, warnings, and errors during the process.
+        Iterates over pending items and attempts to retrieve their corresponding messages via a SOAP service.
+        Each retrieved message is processed, extracting its header and payload. Log messages are generated for success,
+        warnings, and errors during the process.
 
         :raises Fault: If a SOAP fault occurs while attempting to retrieve a message.
         :raises Exception: If an unexpected error occurs during message retrieval.
-        :return: A list of dictionaries where each dictionary contains retrieved message details including message ID, header, and payload.
-        :rtype: list[dict]
+        :return: A generator yielding dictionaries containing retrieved message details including message ID,
+                header, and payload.
+        :rtype: Generator[dict, None, None]
         """
 
         for item in self._get_pending():
@@ -292,6 +297,8 @@ class AS4Receive(AS4Client):
                 continue
 
             try:
+                if self.client is None:
+                    raise RuntimeError("Client not initialized")
                 retrieved = self.client.service.retrieveMessage(messageID=message_id)
             except Fault:
                 _logger.exception(
@@ -303,12 +310,12 @@ class AS4Receive(AS4Client):
                 continue
 
             message = {"messageId": message_id}
-            message["header"] = get_dict_header(
+            header_data = get_dict_header(
                 retrieved.header.ebMSHeaderInfo.UserMessage
             )
-            message["payload"] = get_payload(message["header"], retrieved.body)
+            message["header"] = header_data
+            message["payload"] = get_payload(header_data, retrieved.body)
 
             _logger.debug(f"Retrieved message: {message}")
             yield message
         _logger.info("No more messages to retrieve")
-        return []

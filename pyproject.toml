@@ -1,12 +1,12 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyAS4"
-version = "0.1.11"
+version = "0.1.12"
 description = "Python бібліотека для роботи з AS4 (OASIS ebXML AS4) протоколом обміну повідомленнями"
-authors = [{ name="Andriy Shapovalov" }]
+authors = [{ name = "Andriy Shapovalov" }]
 readme = "README.rst"
 requires-python = ">=3.12"
 dependencies = [
@@ -17,11 +17,31 @@ dependencies = [
 ]
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "pytest-cov",
-    "mypy",
-    "ruff",
+    "mypy>=1.11.0",
+    "pyrefly>=0.60.0",
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.7",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.6.0",
 ]
 
+[tool.setuptools.packages.find]
+include = ["pyAS4*", "pyAS4.*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["pyAS4"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.mypy]
+exclude = ["^build/"]
+
 [tool.ruff.lint]
+select = ["E", "F", "W", "I"]
 ignore = ["N999"]
