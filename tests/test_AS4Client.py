@@ -1,9 +1,8 @@
 # pyrefly: ignore [missing-import]
 
 import base64
-import uuid
 from io import BytesIO
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from pymtom_xop import MtomAttachment, MtomTransport
@@ -11,13 +10,13 @@ from zeep import Client
 from zeep.exceptions import Fault
 
 from pyAS4.AS4Client import (
-    _open_io,
+    AS4Client,
+    AS4Receive,
+    AS4Send,
     _norm_cid,
+    _open_io,
     attachment,
     get_payload,
-    AS4Client,
-    AS4Send,
-    AS4Receive,
 )
 from pyAS4.header import Header
 
@@ -554,10 +553,10 @@ class TestAS4Receive:
         # Create a mock that returns empty string for str()
         mock_pending_item = Mock()
         mock_pending_item.messageId = None
-        
+
         def mock_str(self):
             return ""
-        
+
         mock_pending_item.__class__.__str__ = mock_str
         mock_zeep_client.service.listPendingMessages.return_value = [mock_pending_item]
 

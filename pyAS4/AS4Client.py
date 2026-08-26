@@ -4,11 +4,12 @@ import uuid
 from io import BytesIO
 from typing import Generator
 
-from pyAS4.header import Header, get_dict_header
 from pymtom_xop import MtomAttachment, MtomTransport
 from zeep import Client, Settings, Transport
 from zeep.exceptions import Fault
 from zeep.plugins import HistoryPlugin
+
+from pyAS4.header import Header, get_dict_header
 
 _logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ def _open_io(content: bytes | str | None, encoding_b64: bool = False) -> BytesIO
 
     if encoding_b64:
         return BytesIO(base64.b64encode(content))
-    
+
     return BytesIO(content)
 
 
@@ -180,7 +181,7 @@ class AS4Send(AS4Client):
         :type payload: list[dict]
         """
         attach = attachment(payload)
-        self.transport.add_files(files=attach)
+        self.transport.add_files(files=attach)  # type: ignore
 
         self.client = Client(
             wsdl=self.wsdl,
