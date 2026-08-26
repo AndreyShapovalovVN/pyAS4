@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyAS4"
-version = "0.1.12"
+version = "0.1.13"
 description = "Python бібліотека для роботи з AS4 (OASIS ebXML AS4) протоколом обміну повідомленнями"
 authors = [{ name = "Andriy Shapovalov" }]
 readme = "README.rst"
@@ -14,6 +14,7 @@ dependencies = [
     "zeep>=4.3.3",
     "pymtom_xop @ git+https://github.com/AndreyShapovalovVN/pymtom-xop.git",
     "pyrefly>=0.60.0",
+    "pytest>=9.1.1",
 ]
 [project.optional-dependencies]
 dev = [
