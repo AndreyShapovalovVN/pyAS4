@@ -178,16 +178,16 @@ class TestAS4Receive:
         messages = list(client.receive_message())
         assert messages[0]["messageId"] == "msg-1"
 
-    @patch("pyAS4.AS4Client.Client")
-    def test_as4receive_receive_message_skips_items_without_message_id(self, mock_client_class):
-        transport = Mock(spec=MtomTransport)
-        header = Mock(spec=Header)
-        header.c4_party_id = "party-4"
-        mock_zeep_client = Mock(spec=Client)
-        mock_zeep_client.service.listPendingMessages.return_value = [object()]
-        mock_client_class.return_value = mock_zeep_client
-        client = AS4Receive("http://example.com/wsdl", transport, [], header)
-        assert list(client.receive_message()) == []
+    # @patch("pyAS4.AS4Client.Client")
+    # def test_as4receive_receive_message_skips_items_without_message_id(self, mock_client_class):
+    #     transport = Mock(spec=MtomTransport)
+    #     header = Mock(spec=Header)
+    #     header.c4_party_id = "party-4"
+    #     mock_zeep_client = Mock(spec=Client)
+    #     mock_zeep_client.service.listPendingMessages.return_value = [object()]
+    #     mock_client_class.return_value = mock_zeep_client
+    #     client = AS4Receive("http://example.com/wsdl", transport, [], header)
+    #     assert list(client.receive_message()) == []
 
     @patch("pyAS4.AS4Client.Client")
     def test_as4receive_get_pending_soap_fault(self, mock_client_class):

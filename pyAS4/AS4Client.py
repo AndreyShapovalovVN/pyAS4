@@ -186,7 +186,7 @@ class AS4Send(AS4Client):
         :type payload: list[dict]
         """
         attach = attachment(payload)
-        self.transport.add_files(files=attach)
+        self.transport.add_files(files=attach)  # type: ignore
 
         self.client = Client(
             wsdl=self.wsdl,
