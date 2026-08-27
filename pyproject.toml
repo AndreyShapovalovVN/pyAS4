@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyAS4"
-version = "0.1.17"
+version = "0.1.18"
 description = "Python бібліотека для роботи з AS4 (OASIS ebXML AS4) протоколом обміну повідомленнями"
 authors = [{ name = "Andriy Shapovalov" }]
 readme = "README.rst"

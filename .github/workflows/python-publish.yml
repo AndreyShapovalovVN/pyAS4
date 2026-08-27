@@ -2,7 +2,7 @@ name: Publish Python package
 
 on:
   release:
-    types: [published]
+    types: [ published ]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -45,9 +45,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-      - name: Install build tools
-        run: uv tool install build
       - name: Build package
-        run: uv run build
+        run: uv build
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
