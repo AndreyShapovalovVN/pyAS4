@@ -666,11 +666,11 @@ wheels = [
 
 [[package]]
 name = "pyas4"
-version = "0.1.16"
+version = "0.1.19"
 source = { editable = "." }
 dependencies = [
     { name = "lxml" },
-    { name = "pymtom-xop" },
+    { name = "pymtom-xop-fork" },
     { name = "zeep" },
 ]
 
@@ -688,7 +688,7 @@ dev = [
 requires-dist = [
     { name = "lxml", specifier = ">=6.1.1" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.11.0" },
-    { name = "pymtom-xop", git = "https://github.com/AndreyShapovalovVN/pymtom-xop.git" },
+    { name = "pymtom-xop-fork", specifier = ">=0.0.3" },
     { name = "pyrefly", marker = "extra == 'dev'", specifier = ">=0.60.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.2.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23.7" },
@@ -708,12 +708,16 @@ wheels = [
 ]
 
 [[package]]
-name = "pymtom-xop"
-version = "0.0.2"
-source = { git = "https://github.com/AndreyShapovalovVN/pymtom-xop.git#a775ef196440bcffa779f28622df2cc30b81631c" }
+name = "pymtom-xop-fork"
+version = "0.0.3"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "lxml" },
     { name = "zeep" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8c/ed/5d48390833658b8591e8a69ebfcd55f19cf07abd7ee817708e0357192c30/pymtom_xop_fork-0.0.3.tar.gz", hash = "sha256:596be5dfe0aad3abd05937fd8350ad4c50e6b7a65810be3649136afdfefbfec2", size = 11422, upload-time = "2026-08-27T04:30:36.063Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/93/9c/b6c4a78f2acf8233e9a7489d774c5ec82732753591fa9964aadb41e0de9f/pymtom_xop_fork-0.0.3-py3-none-any.whl", hash = "sha256:d2231d6d622a910c24e6943e1220c4dde1fe1d3ddfe7de7bc94e5cfd1ab919df", size = 9736, upload-time = "2026-08-27T04:30:34.807Z" },
 ]
 
 [[package]]
