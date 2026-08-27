@@ -30,13 +30,13 @@ pyAS4 надає удосконалений клієнт для роботи з 
 
 За допомогою uv::
 
-    uv pip install pyAS4
+    uv sync --extra dev
 
 Або з вихідного коду::
 
     git clone <repository-url>
     cd pyAS4
-    uv pip install -e .
+    uv sync --extra dev
 
 Використання
 ------------

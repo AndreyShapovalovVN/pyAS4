@@ -130,7 +130,7 @@ class AS4Client:
             header: Header,
     ):
         self.wsdl = wsdl
-        self.transport = transport
+        self.transport: Transport = transport
         self.plugins = plugins
         self.header = header
 
@@ -138,11 +138,15 @@ class AS4Client:
         self.client: Client | None = None
 
 
+class MtomTransportProtocol(Transport):
+    def add_files(self, files: list[MtomAttachment]) -> None: ...
+
+
 class AS4Send(AS4Client):
     def __init__(
             self,
             wsdl: str,
-            transport: Transport,
+            transport: MtomTransportProtocol,
             plugins: list[HistoryPlugin],
             header: Header,
     ):
@@ -165,6 +169,7 @@ class AS4Send(AS4Client):
             raise TypeError("Transport must be an instance of MtomTransport")
 
         super().__init__(wsdl, transport, plugins, header)
+        self.transport = transport
 
     def send_message(self, payload: list[dict]):
         """
