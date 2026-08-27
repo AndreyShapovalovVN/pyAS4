@@ -70,13 +70,14 @@ class TestAttachment:
         assert result[1].content_type == "application/xml"
 
     def test_attachment_with_auto_generated_cid(self):
-        result = attachment([{ "content": b"test", "content_type": "text/plain"}])
+        result = attachment([{"content": b"test", "content_type": "text/plain"}])
         assert len(result) == 1
         assert result[0].get_cid().decode()
 
     def test_attachment_appends_to_existing_list(self):
         existing = [Mock(spec=MtomAttachment)]
-        result = attachment([{ "content": b"new", "content_type": "text/plain", "cid": "new-cid"}], attachments=existing)
+        result = attachment([{"content": b"new", "content_type": "text/plain", "cid": "new-cid"}],
+                            attachments=existing)
         assert len(result) == 2
         assert result[0] == existing[0]
 
@@ -113,7 +114,8 @@ class TestGetPayload:
 
 class TestAS4Client:
     def test_as4client_initialization(self):
-        client = AS4Client("http://example.com/service?wsdl", Mock(spec=MtomTransport), [], Mock(spec=Header))
+        client = AS4Client("http://example.com/service?wsdl", Mock(spec=MtomTransport), [],
+                           Mock(spec=Header))
         assert client.client is None
 
 
@@ -137,7 +139,7 @@ class TestAS4Send:
         mock_zeep_client.service.submitMessage.return_value = "success"
         mock_client_class.return_value = mock_zeep_client
         client = AS4Send("http://example.com/wsdl", transport, [], header)
-        assert client.send_message([{ "content": b"test", "content_type": "text/plain"}]) == "success"
+        assert client.send_message([{"content": b"test", "content_type": "text/plain"}]) == "success"
 
 
 class TestAS4Receive:
@@ -155,7 +157,9 @@ class TestAS4Receive:
     @patch("pyAS4.AS4Client.get_dict_header")
     @patch("pyAS4.AS4Client.get_payload")
     @patch("pyAS4.AS4Client.Client")
-    def test_as4receive_receive_message(self, mock_client_class, mock_get_payload, mock_get_dict_header):
+    def test_as4receive_receive_message(
+            self,
+            mock_client_class, mock_get_payload, mock_get_dict_header):
         transport = Mock(spec=MtomTransport)
         header = Mock(spec=Header)
         header.c4_party_id = "party-4"
