@@ -1,8 +1,9 @@
 import base64
 import logging
 import uuid
+from collections.abc import Generator, Sequence
 from io import BytesIO
-from typing import Generator
+from typing import Any, Mapping, TypedDict
 
 from pymtom_xop import MtomAttachment, MtomTransport
 from zeep import Client, Settings, Transport
@@ -14,9 +15,15 @@ from pyAS4.header import Header, get_dict_header
 _logger = logging.getLogger(__name__)
 
 
+class MessageData(TypedDict):
+    messageId: str
+    header: dict[str, Any]
+    payload: list[dict[str, str]]
+
+
 def _open_io(content: bytes | str | None, encoding_b64: bool = False) -> BytesIO:
     """Повертає `BytesIO` для payload; за потреби кодує вміст у base64."""
-    _logger.debug(f"open_io - > {type(content)}")
+    _logger.debug("Opening payload content of type %s", type(content).__name__)
 
     if content is None:
         raise ValueError("Content cannot be None")
@@ -44,7 +51,7 @@ def _norm_cid(cid: str | bytes) -> str:
 
 
 def attachment(
-        files: list[dict[str, str | bytes]], attachments: list[MtomAttachment] | None = None
+        files: Sequence[Mapping[str, str | bytes]], attachments: list[MtomAttachment] | None = None
 ) -> list[MtomAttachment]:
     """
     Додає вкладення до списку `attachments` на основі переданих файлів.
@@ -67,7 +74,7 @@ def attachment(
     return attachments
 
 
-def get_payload(user_message: dict, body) -> list[dict[str, str]]:
+def get_payload(user_message: dict[str, Any], body: Any) -> list[dict[str, str]]:
     """
     Перетворює частини повідомлення та payload на список словників для зручності обробки.
     :param user_message:
@@ -77,7 +84,7 @@ def get_payload(user_message: dict, body) -> list[dict[str, str]]:
 
     payloads = body.payload
     if isinstance(payloads, list):
-        _logger.info(f"Received {len(payloads)} payloads in part")
+        _logger.info("Received %d payloads in part", len(payloads))
     else:
         payloads = [payloads]
         _logger.info("Received a single payload in part, wrapping in lists")
@@ -93,7 +100,7 @@ def get_payload(user_message: dict, body) -> list[dict[str, str]]:
             if payload.payloadId == part.get("href", "").strip('"'):
                 m.update({"content": payload.value.decode()})
         if not m.get("content"):
-            _logger.error(f"Part {part.get('href', '')} has no content, skipping")
+            _logger.error("Part %s has no content, skipping", part.get("href", ""))
             continue
         meta_parts.append(m)
     return meta_parts
@@ -172,7 +179,7 @@ class AS4Send(AS4Client):
         super().__init__(wsdl, transport, plugins, header)
         self.transport = transport
 
-    def send_message(self, payload: list[dict]):
+    def send_message(self, payload: Sequence[Mapping[str, str | bytes]]) -> Any:
         """
         Sends a message by preparing and attaching payload data to the transport, then
         initializing a SOAP client for further communication.
@@ -198,7 +205,7 @@ class AS4Send(AS4Client):
         bodyload_obj = None
         payload_objs = []
 
-        for idx, file in enumerate(attach):
+        for file in attach:
             payload_id = f"cid:{_norm_cid(file.get_cid())}"
             obj = PayloadType(
                 value=file.get_cid(),
@@ -221,7 +228,7 @@ class AS4Send(AS4Client):
         except Exception:
             _logger.exception("Error sending message")
             raise
-        _logger.info(f"Message sent successfully: {response}")
+        _logger.info("Message sent successfully: %s", response)
         return response
 
 
@@ -230,33 +237,12 @@ class AS4Receive(AS4Client):
             self,
             wsdl: str,
             transport: Transport,
-            plugins: list[HistoryPlugin],
-            header: Header,
+            c4_party_id: str,
+            plugins: list[HistoryPlugin] = [HistoryPlugin()],
     ):
-        """
-        Initializes a new instance of the class.
+        super().__init__(wsdl, transport, plugins, header=None)
 
-        This constructor establishes the core components required for the proper
-        functioning of the object by accepting necessary parameters including WSDL
-        configuration, transport layer, plugins, and header data. These components
-        are essential for initializing the client object which enables interaction
-        with specified SOAP endpoints.
-
-        :param wsdl: WSDL URL or file path to be used for client configuration.
-            Represents the Web Services Description Language definition for the SOAP
-            service.
-        :type wsdl: str
-        :param transport: A transport instance that handles HTTP requests and responses
-            for the SOAP client.
-        :type transport: Transport
-        :param plugins: A list of plugins to be used by the SOAP client for functionalities
-            such as logging or request/response alterations.
-        :type plugins: list[HistoryPlugin]
-        :param header: The header object used to define additional metadata or
-            authentication details for SOAP requests.
-        :type header: Header
-        """
-        super().__init__(wsdl, transport, plugins, header)
+        self.c4_party_id = c4_party_id
 
         self.client = Client(
             wsdl=self.wsdl,
@@ -265,14 +251,14 @@ class AS4Receive(AS4Client):
             plugins=self.plugins,
         )
 
-    def _get_pending(self) -> list:
+    def _get_pending(self) -> list[Any]:
         try:
             if self.client is None:
                 raise RuntimeError("Client not initialized")
             response = self.client.service.listPendingMessages(
-                finalRecipient=self.header.c4_party_id
+                finalRecipient=self.c4_party_id
             )
-            _logger.info(f"Received message: {len(response)}")
+            _logger.info("Received %d pending messages", len(response))
             return response
         except Fault:
             _logger.exception("SOAP Fault occurred")
@@ -281,20 +267,7 @@ class AS4Receive(AS4Client):
             _logger.exception("Error receiving message")
             raise
 
-    def receive_message(self) -> Generator[dict, None, None]:
-        """
-        Retrieve and process messages.
-
-        Iterates over pending items and attempts to retrieve their corresponding messages via a SOAP service.
-        Each retrieved message is processed, extracting its header and payload. Log messages are generated for success,
-        warnings, and errors during the process.
-
-        :raises Fault: If a SOAP fault occurs while attempting to retrieve a message.
-        :raises Exception: If an unexpected error occurs during message retrieval.
-        :return: A generator yielding dictionaries containing retrieved message details including message ID,
-                header, and payload.
-        :rtype: Generator[dict, None, None]
-        """
+    def receive_message(self) -> Generator[MessageData, None, None]:
 
         for item in self._get_pending():
             message_id = getattr(item, "messageId", None) or str(item)
@@ -308,20 +281,22 @@ class AS4Receive(AS4Client):
                 retrieved = self.client.service.retrieveMessage(messageID=message_id)
             except Fault:
                 _logger.exception(
-                    f"SOAP Fault occurred while retrieving message {message_id}"
+                    "SOAP Fault occurred while retrieving message %s", message_id
                 )
                 continue
             except Exception:
-                _logger.exception(f"Error retrieving message {message_id}")
+                _logger.exception("Error retrieving message %s", message_id)
                 continue
 
-            message = {"messageId": message_id}
             header_data = get_dict_header(
                 retrieved.header.ebMSHeaderInfo.UserMessage
             )
-            message["header"] = header_data
-            message["payload"] = get_payload(header_data, retrieved.body)
+            message = MessageData(
+                messageId=message_id,
+                header=header_data,
+                payload=get_payload(header_data, retrieved.body),
+            )
 
-            _logger.debug(f"Retrieved message: {message}")
+            _logger.debug("Retrieved message %s", message_id)
             yield message
         _logger.info("No more messages to retrieve")

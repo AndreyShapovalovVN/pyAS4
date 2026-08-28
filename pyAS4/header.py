@@ -10,9 +10,9 @@ _NS = {
     "rs": "urn:oasis:names:tc:ebxml-regrep:xsd:rs:4.0",
     "rim": "urn:oasis:names:tc:ebxml-regrep:xsd:rim:4.0",
     "xsi": "http://www.w3.org/2001/XMLSchema-instance",
-    "sdg": "http://data.europa.eu/sdg#", # NOSONAR
+    "sdg": "http://data.europa.eu/sdg#",  # NOSONAR
     "s12": "http://www.w3.org/2003/05/soap-envelope",
-    "eu": "http://eu.domibus.wsplugin/", # NOSONAR
+    "eu": "http://eu.domibus.wsplugin/",  # NOSONAR
     "eb3": "http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/",
 }
 
@@ -56,11 +56,11 @@ class Header:
                  c3_party_id_type: str,
                  c4_party_id: str,
                  c4_party_id_type: str,
-                 conversationid: str = str(uuid.uuid4()),
-                 service: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/service",  #NOSONAR
+                 conversationid: str | None = None,
+                 service: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/service",  # NOSONAR
                  service_type: str = "urn:oasis:names:tc:ebcore:ebrs:ebms:binding:1.0",
-                 action: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/action",  #NOSONAR
-                 role: str = "http://sdg.europa.eu/edelivery/gateway" #NOSONAR
+                 action: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/action",  # NOSONAR
+                 role: str = "http://sdg.europa.eu/edelivery/gateway"  # NOSONAR
                  ):
         """
         Initializes an instance of the class with required and optional attributes to configure
@@ -104,7 +104,7 @@ class Header:
         self.service = service
         self.service_type = service_type
         self.action = action
-        self.conversationid = conversationid
+        self.conversationid = conversationid or str(uuid.uuid4())
         self.role = role
         self.pay_load_info = self.__toxml()
 
@@ -127,43 +127,41 @@ class Header:
         froms = etree.SubElement(party_info, _nsmap('eb3', 'From'))
         etree.SubElement(froms, _nsmap('eb3', 'PartyId'),
                          attrib={'type': self.c2_party_id_type},
-                         ).text=self.c2_party_id
+                         ).text = self.c2_party_id
         etree.SubElement(froms, _nsmap('eb3', 'Role'),
-                         ).text=self.role
+                         ).text = self.role
 
         to = etree.SubElement(party_info, _nsmap('eb3', 'To'))
         etree.SubElement(to, _nsmap('eb3', 'PartyId'),
                          attrib={'type': self.c3_party_id_type},
-                         ).text=self.c3_party_id
+                         ).text = self.c3_party_id
         etree.SubElement(to, _nsmap('eb3', 'Role'),
-                         ).text=self.role
+                         ).text = self.role
 
         collaboration_info = etree.SubElement(user_message, _nsmap('eb3', 'CollaborationInfo'))
         etree.SubElement(collaboration_info, _nsmap('eb3', 'Service'),
-                         type="urn:oasis:names:tc:ebcore:ebrs:ebms:binding:1.0",
-                         ).text=self.service
+                         type=self.service_type,
+                         ).text = self.service
         etree.SubElement(collaboration_info, _nsmap('eb3', 'Action'),
-                         ).text=self.action
+                         ).text = self.action
         etree.SubElement(collaboration_info, _nsmap('eb3', 'ConversationId'),
-                         ).text=self.conversationid
+                         ).text = self.conversationid
 
         message_proportis = etree.SubElement(user_message, _nsmap('eb3', 'MessageProperties'))
         etree.SubElement(message_proportis, _nsmap('eb3', 'Property'),
                          attrib={
                              'name': 'originalSender',
                              'type': self.c1_party_id_type},
-                         ).text=self.c1_party_id
+                         ).text = self.c1_party_id
         etree.SubElement(message_proportis, _nsmap('eb3', 'Property'),
                          attrib={
                              'name': 'finalRecipient',
                              'type': self.c4_party_id_type},
-                         ).text=self.c4_party_id
+                         ).text = self.c4_party_id
 
-        pay_load_info = etree.SubElement(user_message, _nsmap('eb3', 'PayloadInfo'))
+        self.pay_load_info = etree.SubElement(user_message, _nsmap('eb3', 'PayloadInfo'))
 
-        return pay_load_info
-
-    def payload_append(self, payloads: list[dict[str, str]]):
+    def payload_append(self, payloads: list[dict[str, str]]) -> None:
         """
         Appends payload information to the internal XML structure.
 
@@ -180,14 +178,14 @@ class Header:
         for payload in payloads:
             pl = etree.SubElement(self.pay_load_info, _nsmap('eb3', 'PartInfo'),
                                   attrib={'href': payload['href']})
-            pp = etree.SubElement(pl, _nsmap('eb3', 'PartProperties'),)
+            pp = etree.SubElement(pl, _nsmap('eb3', 'PartProperties'), )
             etree.SubElement(pp, _nsmap('eb3', 'Property'),
                              attrib={'name': "MimeType"},
-                             ).text=payload['mimetype']
+                             ).text = payload['mimetype']
             if payload.get('CompressionType', None):
                 etree.SubElement(pp, _nsmap('eb3', 'Property'),
                                  attrib={'name': "CompressionType"},
-                                 ).text=payload['CompressionType']
+                                 ).text = payload['CompressionType']
 
     @property
     def element(self) -> etree._Element:
@@ -247,7 +245,7 @@ def get_dict_header(source_message) -> dict:
     }
     parts = source_message.PayloadInfo.PartInfo
     if isinstance(parts, list):
-        _logger.info(f"Received {len(parts)} parts in message")
+        _logger.info("Received %d parts in message", len(parts))
     else:
         parts = [parts]
         _logger.info("Received a single part in a message, wrapping in lists")

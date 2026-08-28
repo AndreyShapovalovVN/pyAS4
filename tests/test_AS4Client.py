@@ -53,14 +53,16 @@ class TestNormCid:
 
 class TestAttachment:
     def test_attachment_single_file(self):
-        files = [{"content": b"test content", "content_type": "text/plain", "cid": "test-cid"}]
+        files: list[dict[str, str | bytes]] = [
+            {"content": b"test content", "content_type": "text/plain", "cid": "test-cid"}
+        ]
         result = attachment(files)
         assert len(result) == 1
         assert isinstance(result[0], MtomAttachment)
         assert result[0].content_type == "text/plain"
 
     def test_attachment_multiple_files(self):
-        files = [
+        files: list[dict[str, str | bytes]] = [
             {"content": b"file1", "content_type": "text/plain", "cid": "cid1"},
             {"content": b"file2", "content_type": "application/xml", "cid": "cid2"},
         ]
@@ -117,6 +119,27 @@ class TestAS4Client:
         client = AS4Client("http://example.com/service?wsdl", Mock(spec=MtomTransport), [],
                            Mock(spec=Header))
         assert client.client is None
+
+
+class TestHeader:
+    @staticmethod
+    def _make_header(**kwargs):
+        return Header(
+            "c1", "type-1", "c2", "type-2", "c3", "type-3", "c4", "type-4", **kwargs
+        )
+
+    def test_default_conversation_id_is_unique_per_header(self):
+        first = self._make_header()
+        second = self._make_header()
+
+        assert first.conversationid != second.conversationid
+
+    def test_service_type_is_written_to_xml(self):
+        header = self._make_header(service_type="custom-service-type")
+        service = header.element.find(".//{http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/}Service")
+
+        assert service is not None
+        assert service.get("type") == "custom-service-type"
 
 
 class TestAS4Send:

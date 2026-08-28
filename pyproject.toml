@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyAS4"
-version = "0.1.19"
+version = "0.1.20"
 description = "Python бібліотека для роботи з AS4 (OASIS ebXML AS4) протоколом обміну повідомленнями"
 authors = [{ name = "Andriy Shapovalov" }]
 readme = "README.rst"
@@ -27,6 +27,9 @@ dev = [
 [tool.setuptools.packages.find]
 include = ["pyAS4*", "pyAS4.*"]
 
+[tool.setuptools.package-data]
+pyAS4 = ["py.typed"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
@@ -40,6 +43,12 @@ line-length = 120
 
 [tool.mypy]
 exclude = ["^build/"]
+check_untyped_defs = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["lxml.*", "pymtom_xop.*"]
+ignore_missing_imports = true
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
