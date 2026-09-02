@@ -205,7 +205,7 @@ class AS4Send(AS4Client):
             settings=self.settings,
             plugins=self.plugins,
         )
-        PayloadType = self.client.get_type("ns0:LargePayloadType")
+        PayloadType = self.client.get_type("ns0:LargePayloadType")  # NOSONAR
         bodyload_obj = None
         payload_objs = []
 

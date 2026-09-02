@@ -221,7 +221,7 @@ def get_dict_header(source_message) -> dict:
     :param source_message:
     :return:
     """
-    headers = {
+    headers: dict = {
         "messageId": source_message.MessageInfo.MessageId,
         "timestamp": source_message.MessageInfo.Timestamp,
         "Party": {
@@ -242,7 +242,13 @@ def get_dict_header(source_message) -> dict:
             "action": source_message.CollaborationInfo.Action,
             "conversationId": source_message.CollaborationInfo.ConversationId,
         },
+        "MessageProperties": _proporty(source_message.MessageProperties),
+        "PayloadInfo": _payload_info(source_message),
     }
+    return headers
+
+
+def _payload_info(source_message) -> list:
     parts = source_message.PayloadInfo.PartInfo
     if isinstance(parts, list):
         _logger.info("Received %d parts in message", len(parts))
@@ -250,7 +256,7 @@ def get_dict_header(source_message) -> dict:
         parts = [parts]
         _logger.info("Received a single part in a message, wrapping in lists")
 
-    meta_parts = []
+    meta_parts: list = []
     for part in parts:
         m = {"href": part.href.strip('"')}
 
@@ -258,6 +264,19 @@ def get_dict_header(source_message) -> dict:
             m.update({proporty.name: proporty._value_1})
 
         meta_parts.append(m)
+    return meta_parts
 
-    headers["PayloadInfo"] = meta_parts
-    return headers
+
+def _proporty(source: list) -> list:
+    if isinstance(source, list):
+        _logger.info("Received %d properties in message", len(source))
+    else:
+        source = [source]
+        _logger.info("Received a single property in a message, wrapping in lists")
+
+    proporty_list: list = []
+    for proporty in source:
+        proporty_list.append({proporty.name: proporty._value_1})
+        _logger.debug("Property name: %s, value: %s", proporty.name, proporty._value_1)
+
+    return proporty_list
