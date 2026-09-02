@@ -135,6 +135,23 @@ class TestHeader:
         assert service is not None
         assert service.get("type") == "custom-service-type"
 
+    def test_payload_append_adds_part_info_to_header(self):
+        header = self._make_header()
+
+        header.payload_append(
+            [{"href": "cid:evidence.xml", "mimetype": "application/xml"}]
+        )
+
+        namespace = "{http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/}"
+        part_info = header.element.find(f".//{namespace}PartInfo")
+        mime_type = header.element.find(
+            f".//{namespace}PartProperties/{namespace}Property[@name='MimeType']"
+        )
+        assert part_info is not None
+        assert part_info.get("href") == "cid:evidence.xml"
+        assert mime_type is not None
+        assert mime_type.text == "application/xml"
+
 
 class TestAS4Send:
     @patch("pyAS4.AS4Client.Client")

@@ -159,7 +159,7 @@ class Header:
                              'type': self.c4_party_id_type},
                          ).text = self.c4_party_id
 
-        self.pay_load_info = etree.SubElement(user_message, _nsmap('eb3', 'PayloadInfo'))
+        return etree.SubElement(user_message, _nsmap('eb3', 'PayloadInfo'))
 
     def payload_append(self, payloads: list[dict[str, str]]) -> None:
         """
