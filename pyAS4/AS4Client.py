@@ -135,7 +135,7 @@ class AS4Client:
             wsdl: str,
             transport: Transport,
             plugins: list[HistoryPlugin],
-            header: Header,
+            header: Header | None,
     ):
         self.wsdl = wsdl
         self.transport: Transport = transport
@@ -178,6 +178,7 @@ class AS4Send(AS4Client):
 
         super().__init__(wsdl, transport, plugins, header)
         self.transport = transport
+        self.header = header
 
     def send_message(self, payload: Sequence[Mapping[str, str | bytes]]) -> Any:
         """
@@ -192,6 +193,9 @@ class AS4Send(AS4Client):
             necessary data to be sent as part of the operation.
         :type payload: list[dict]
         """
+        if self.header is None:
+            raise RuntimeError("Header is required to send a message")
+
         attach = attachment(payload)
         self.transport.add_files(files=attach)  # type: ignore
 
@@ -237,12 +241,18 @@ class AS4Receive(AS4Client):
             self,
             wsdl: str,
             transport: Transport,
-            c4_party_id: str,
-            plugins: list[HistoryPlugin] = [HistoryPlugin()],
+            plugins: list[HistoryPlugin],
+            header: Header | None = None,
+            *,
+            c4_party_id: str | None = None,
     ):
-        super().__init__(wsdl, transport, plugins, header=None)
+        """Initialize a receiver from either a full header or a recipient ID."""
+        super().__init__(wsdl, transport, plugins, header)
 
-        self.c4_party_id = c4_party_id
+        resolved_c4_party_id = c4_party_id or getattr(header, "c4_party_id", None)
+        if not resolved_c4_party_id:
+            raise ValueError("Either header or c4_party_id must be provided")
+        self.c4_party_id = resolved_c4_party_id
 
         self.client = Client(
             wsdl=self.wsdl,

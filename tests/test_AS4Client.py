@@ -120,7 +120,6 @@ class TestAS4Client:
                            Mock(spec=Header))
         assert client.client is None
 
-
 class TestHeader:
     @staticmethod
     def _make_header(**kwargs):
@@ -166,6 +165,24 @@ class TestAS4Send:
 
 
 class TestAS4Receive:
+    @patch("pyAS4.AS4Client.Client")
+    def test_as4receive_can_use_recipient_id_without_header(self, mock_client_class):
+        client = AS4Receive(
+            "http://example.com/wsdl",
+            Mock(spec=MtomTransport),
+            [],
+            c4_party_id="party-4",
+        )
+
+        assert client.header is None
+        assert client.c4_party_id == "party-4"
+        mock_client_class.assert_called_once()
+
+    @patch("pyAS4.AS4Client.Client")
+    def test_as4receive_requires_header_or_recipient_id(self, mock_client_class):
+        with pytest.raises(ValueError, match="Either header or c4_party_id must be provided"):
+            AS4Receive("http://example.com/wsdl", Mock(spec=MtomTransport), [])
+
     @patch("pyAS4.AS4Client.Client")
     def test_as4receive_get_pending(self, mock_client_class):
         transport = Mock(spec=MtomTransport)
