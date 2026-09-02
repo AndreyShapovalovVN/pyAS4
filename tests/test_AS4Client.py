@@ -9,7 +9,7 @@ from pymtom_xop import MtomAttachment, MtomTransport
 from zeep import Client
 from zeep.exceptions import Fault
 
-from pyAS4.AS4Client import AS4Client, AS4Receive, AS4Send, _norm_cid, _open_io, attachment, get_payload
+from pyAS4.AS4Client import AS4Client, AS4Receive, AS4Send, Payload, _norm_cid, _open_io, attachment, get_payload
 from pyAS4.header import Header
 
 
@@ -53,7 +53,7 @@ class TestNormCid:
 
 class TestAttachment:
     def test_attachment_single_file(self):
-        files: list[dict[str, str | bytes]] = [
+        files: list[Payload] = [
             {"content": b"test content", "content_type": "text/plain", "cid": "test-cid"}
         ]
         result = attachment(files)
@@ -62,7 +62,7 @@ class TestAttachment:
         assert result[0].content_type == "text/plain"
 
     def test_attachment_multiple_files(self):
-        files: list[dict[str, str | bytes]] = [
+        files: list[Payload] = [
             {"content": b"file1", "content_type": "text/plain", "cid": "cid1"},
             {"content": b"file2", "content_type": "application/xml", "cid": "cid2"},
         ]

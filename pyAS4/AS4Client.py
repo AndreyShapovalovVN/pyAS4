@@ -3,7 +3,7 @@ import logging
 import uuid
 from collections.abc import Generator, Sequence
 from io import BytesIO
-from typing import Any, Mapping, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 from pymtom_xop import MtomAttachment, MtomTransport
 from zeep import Client, Settings, Transport
@@ -19,6 +19,14 @@ class MessageData(TypedDict):
     messageId: str
     header: dict[str, Any]
     payload: list[dict[str, str]]
+
+
+class Payload(TypedDict):
+    """One MTOM payload accepted by :meth:`AS4Send.send_message`."""
+
+    content: bytes | str
+    content_type: str
+    cid: NotRequired[str]
 
 
 def _open_io(content: bytes | str | None, encoding_b64: bool = False) -> BytesIO:
@@ -50,9 +58,7 @@ def _norm_cid(cid: str | bytes) -> str:
     return cid
 
 
-def attachment(
-        files: Sequence[Mapping[str, str | bytes]], attachments: list[MtomAttachment] | None = None
-) -> list[MtomAttachment]:
+def attachment(files: Sequence[Payload], attachments: list[MtomAttachment] | None = None) -> list[MtomAttachment]:
     """
     Додає вкладення до списку `attachments` на основі переданих файлів.
     Кожен файл у списку `files` повинен бути словником з ключами
@@ -131,11 +137,11 @@ class AS4Client:
     """
 
     def __init__(
-            self,
-            wsdl: str,
-            transport: Transport,
-            plugins: list[HistoryPlugin],
-            header: Header | None,
+        self,
+        wsdl: str,
+        transport: Transport,
+        plugins: list[HistoryPlugin],
+        header: Header | None,
     ):
         self.wsdl = wsdl
         self.transport: Transport = transport
@@ -152,11 +158,11 @@ class MtomTransportProtocol(Transport):
 
 class AS4Send(AS4Client):
     def __init__(
-            self,
-            wsdl: str,
-            transport: MtomTransportProtocol,
-            plugins: list[HistoryPlugin],
-            header: Header,
+        self,
+        wsdl: str,
+        transport: MtomTransportProtocol,
+        plugins: list[HistoryPlugin],
+        header: Header,
     ):
         """
         Initializes the client with a specific WSDL, transport, plugin list, and header.
@@ -180,7 +186,7 @@ class AS4Send(AS4Client):
         self.transport = transport
         self.header = header
 
-    def send_message(self, payload: Sequence[Mapping[str, str | bytes]]) -> Any:
+    def send_message(self, payload: Sequence[Payload]) -> Any:
         """
         Sends a message by preparing and attaching payload data to the transport, then
         initializing a SOAP client for further communication.
@@ -211,14 +217,13 @@ class AS4Send(AS4Client):
 
         for file in attach:
             payload_id = f"cid:{_norm_cid(file.get_cid())}"
+            # pyrefly: ignore [not-callable]
             obj = PayloadType(
                 value=file.get_cid(),
                 payloadId=payload_id,
                 contentType=file.content_type,
             )
-            self.header.payload_append(
-                [{"href": payload_id, "mimetype": file.content_type}]
-            )
+            self.header.payload_append([{"href": payload_id, "mimetype": file.content_type}])
             payload_objs.append(obj)
         try:
             response = self.client.service.submitMessage(
@@ -238,13 +243,13 @@ class AS4Send(AS4Client):
 
 class AS4Receive(AS4Client):
     def __init__(
-            self,
-            wsdl: str,
-            transport: Transport,
-            plugins: list[HistoryPlugin],
-            header: Header | None = None,
-            *,
-            c4_party_id: str | None = None,
+        self,
+        wsdl: str,
+        transport: Transport,
+        plugins: list[HistoryPlugin],
+        header: Header | None = None,
+        *,
+        c4_party_id: str | None = None,
     ):
         """Initialize a receiver from either a full header or a recipient ID."""
         super().__init__(wsdl, transport, plugins, header)
@@ -265,9 +270,7 @@ class AS4Receive(AS4Client):
         try:
             if self.client is None:
                 raise RuntimeError("Client not initialized")
-            response = self.client.service.listPendingMessages(
-                finalRecipient=self.c4_party_id
-            )
+            response = self.client.service.listPendingMessages(finalRecipient=self.c4_party_id)
             _logger.info("Received %d pending messages", len(response))
             return response
         except Fault:
@@ -290,17 +293,13 @@ class AS4Receive(AS4Client):
                     raise RuntimeError("Client not initialized")
                 retrieved = self.client.service.retrieveMessage(messageID=message_id)
             except Fault:
-                _logger.exception(
-                    "SOAP Fault occurred while retrieving message %s", message_id
-                )
+                _logger.exception("SOAP Fault occurred while retrieving message %s", message_id)
                 continue
             except Exception:
                 _logger.exception("Error retrieving message %s", message_id)
                 continue
 
-            header_data = get_dict_header(
-                retrieved.header.ebMSHeaderInfo.UserMessage
-            )
+            header_data = get_dict_header(retrieved.header.ebMSHeaderInfo.UserMessage)
             message = MessageData(
                 messageId=message_id,
                 header=header_data,

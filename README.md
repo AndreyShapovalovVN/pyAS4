@@ -125,6 +125,23 @@ except Fault as exc:
 
 Контракт одного елемента `payload`:
 
+```python
+from typing import NotRequired, TypedDict
+
+
+class Payload(TypedDict):
+    content: bytes | str
+    content_type: str
+    cid: NotRequired[str]
+```
+
+Сигнатура методу:
+
+```python
+def send_message(self, payload: Sequence[Payload]) -> Any:
+    ...
+```
+
 - `content` (`bytes | str`) — обов'язковий вміст вкладення. Рядок кодується як UTF-8.
 
 - `content_type` (`str`) — обов'язковий MIME-тип, наприклад `application/xml`
@@ -299,4 +316,4 @@ EUPL v1.2
 ---
 
 Примітка: Бібліотека розроблена для роботи з системами електронної доставки, що відповідають стандартам OASIS ebXML AS4,
-та особливо для проєктів, що використовують PEPPOL мережу.
+та особливо для проєктів, що використовують OOTS мережу.
