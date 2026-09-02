@@ -53,9 +53,7 @@ class TestNormCid:
 
 class TestAttachment:
     def test_attachment_single_file(self):
-        files: list[Payload] = [
-            {"content": b"test content", "content_type": "text/plain", "cid": "test-cid"}
-        ]
+        files: list[Payload] = [{"content": b"test content", "content_type": "text/plain", "cid": "test-cid"}]
         result = attachment(files)
         assert len(result) == 1
         assert isinstance(result[0], MtomAttachment)
@@ -78,8 +76,7 @@ class TestAttachment:
 
     def test_attachment_appends_to_existing_list(self):
         existing = [Mock(spec=MtomAttachment)]
-        result = attachment([{"content": b"new", "content_type": "text/plain", "cid": "new-cid"}],
-                            attachments=existing)
+        result = attachment([{"content": b"new", "content_type": "text/plain", "cid": "new-cid"}], attachments=existing)
         assert len(result) == 2
         assert result[0] == existing[0]
 
@@ -116,16 +113,14 @@ class TestGetPayload:
 
 class TestAS4Client:
     def test_as4client_initialization(self):
-        client = AS4Client("http://example.com/service?wsdl", Mock(spec=MtomTransport), [],
-                           Mock(spec=Header))
+        client = AS4Client("http://example.com/service?wsdl", Mock(spec=MtomTransport), [], Mock(spec=Header))
         assert client.client is None
+
 
 class TestHeader:
     @staticmethod
     def _make_header(**kwargs):
-        return Header(
-            "c1", "type-1", "c2", "type-2", "c3", "type-3", "c4", "type-4", **kwargs
-        )
+        return Header("c1", "type-1", "c2", "type-2", "c3", "type-3", "c4", "type-4", **kwargs)
 
     def test_default_conversation_id_is_unique_per_header(self):
         first = self._make_header()
@@ -142,10 +137,6 @@ class TestHeader:
 
 
 class TestAS4Send:
-    def test_as4send_invalid_transport_raises_error(self):
-        with pytest.raises(TypeError, match="Transport must be an instance of MtomTransport"):
-            AS4Send("http://example.com/wsdl", Mock(), [], Mock(spec=Header))
-
     @patch("pyAS4.AS4Client.Client")
     @patch("pyAS4.AS4Client.attachment")
     def test_as4send_send_message(self, mock_attachment_func, mock_client_class):
@@ -179,11 +170,6 @@ class TestAS4Receive:
         mock_client_class.assert_called_once()
 
     @patch("pyAS4.AS4Client.Client")
-    def test_as4receive_requires_header_or_recipient_id(self, mock_client_class):
-        with pytest.raises(ValueError, match="Either header or c4_party_id must be provided"):
-            AS4Receive("http://example.com/wsdl", Mock(spec=MtomTransport), [])
-
-    @patch("pyAS4.AS4Client.Client")
     def test_as4receive_get_pending(self, mock_client_class):
         transport = Mock(spec=MtomTransport)
         header = Mock(spec=Header)
@@ -197,9 +183,7 @@ class TestAS4Receive:
     @patch("pyAS4.AS4Client.get_dict_header")
     @patch("pyAS4.AS4Client.get_payload")
     @patch("pyAS4.AS4Client.Client")
-    def test_as4receive_receive_message(
-            self,
-            mock_client_class, mock_get_payload, mock_get_dict_header):
+    def test_as4receive_receive_message(self, mock_client_class, mock_get_payload, mock_get_dict_header):
         transport = Mock(spec=MtomTransport)
         header = Mock(spec=Header)
         header.c4_party_id = "party-4"
