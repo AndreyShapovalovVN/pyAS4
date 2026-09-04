@@ -212,28 +212,92 @@ receiver = AS4Receive(
         "payload": list[dict[str, str]],
     }
 
-Приклад скороченого результату:
+#### Приклад реального отриманого повідомлення
 
+Нижче наведено анонімізований приклад повідомлення, отриманого від Domibus у сценарії OOTS `ExecuteQueryRequest`.
+Операційні ідентифікатори та персональні дані замінені демонстраційними значеннями.
+
+```python
+import datetime
+
+messages = [
     {
-        "messageId": "uuid-message-id",
+        "messageId": "00000000-0000-0000-0000-000000000001@domibus.eu",
         "header": {
-            "CollaborationInfo": {
-                "service": "http://example.eu/services/evidence",
-                "action": "http://example.eu/actions/submit-evidence",
-                "conversationId": "conversation-id",
+            "messageId": "00000000-0000-0000-0000-000000000001@domibus.eu",
+            "timestamp": datetime.datetime(2026, 9, 4, 10, 16, 33, 679505),
+            "Party": {
+                "From": {
+                    "name": "domibus-red",
+                    "type": "urn:oasis:names:tc:ebcore:partyid-type:unregistered:oots",
+                    "role": "http://sdg.europa.eu/edelivery/gateway",
+                },
+                "To": {
+                    "name": "domibus-blue",
+                    "type": "urn:oasis:names:tc:ebcore:partyid-type:unregistered:oots",
+                    "role": "http://sdg.europa.eu/edelivery/gateway",
+                },
             },
+            "CollaborationInfo": {
+                "service": "QueryManager",
+                "serviceType": "urn:oasis:names:tc:ebcore:ebrs:ebms:binding:1.0",
+                "action": "ExecuteQueryRequest",
+                "conversationId": "00000000-0000-0000-0000-000000000002",
+            },
+            "MessageProperties": [
+                {
+                    "finalRecipient": "EXAMPLE_PROVIDER",
+                    "type": "urn:oasis:names:tc:ebcore:partyid-type:unregistered:XX",
+                },
+                {
+                    "originalSender": "EXAMPLE_REQUESTER",
+                    "type": "urn:oasis:names:tc:ebcore:partyid-type:unregistered:XX",
+                },
+            ],
             "PayloadInfo": [
-                {"href": "cid:evidence.xml", "MimeType": "application/xml"}
+                {
+                    "href": "cid:ootsPayload@er.oots.eu",
+                    "MimeType": "application/x-ebrs+xml",
+                }
             ],
         },
         "payload": [
             {
-                "href": "cid:evidence.xml",
-                "MimeType": "application/xml",
-                "content": "<Evidence>...</Evidence>",
+                "href": "cid:ootsPayload@er.oots.eu",
+                "content": """\
+<query:QueryRequest
+    xmlns:query="urn:oasis:names:tc:ebxml-regrep:xsd:query:4.0"
+    xmlns:rim="urn:oasis:names:tc:ebxml-regrep:xsd:rim:4.0"
+    xmlns:sdg="http://data.europa.eu/p4s"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    id="urn:uuid:00000000-0000-0000-0000-000000000003"
+    xml:lang="EN">
+  <!-- Скорочено: SpecificationIdentifier, Procedure, Requirements тощо -->
+  <query:Query queryDefinition="DocumentQuery">
+    <rim:Slot name="NaturalPerson">
+      <rim:SlotValue xsi:type="rim:AnyValueType">
+        <sdg:Person>
+          <sdg:LevelOfAssurance>Substantial</sdg:LevelOfAssurance>
+          <sdg:Identifier schemeID="eidas">XX/YY/REDACTED</sdg:Identifier>
+          <sdg:FamilyName>REDACTED</sdg:FamilyName>
+          <sdg:GivenName>REDACTED</sdg:GivenName>
+          <sdg:DateOfBirth>REDACTED</sdg:DateOfBirth>
+        </sdg:Person>
+      </rim:SlotValue>
+    </rim:Slot>
+  </query:Query>
+</query:QueryRequest>""",
             }
         ],
     }
+]
+```
+
+Це Python-структура, а не готовий JSON: поле `timestamp` містить
+`datetime.datetime`. Перед серіалізацією в JSON його потрібно перетворити, наприклад, через `timestamp.isoformat()`.
+Повний XML payload доступний у
+`message["payload"][0]["content"]`; MIME-тип відповідного вкладення знаходиться в `message["header"]["PayloadInfo"]` за
+тим самим `href`.
 
 SOAP Fault під час отримання списку pending messages передається користувачу. Помилки завантаження окремих повідомлень
 логуються, після чого генератор переходить до наступного повідомлення.
@@ -301,7 +365,7 @@ EUPL v1.2
 
 ## Поточна версія
 
-0.1.21
+0.1.22
 
 ## Внески
 

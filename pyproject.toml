@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyAS4"
-version = "0.1.21"
+version = "0.1.22"
 description = "Python бібліотека для роботи з AS4 (OASIS ebXML AS4) протоколом обміну повідомленнями"
 authors = [{ name = "Andriy Shapovalov" }]
 readme = "README.md"
@@ -13,6 +13,7 @@ dependencies = [
     "lxml>=6.1.1",
     "zeep>=4.3.3",
     "pymtom-xop-fork>=0.0.3",
+    "pyregrep>=14",
 ]
 [project.optional-dependencies]
 dev = [

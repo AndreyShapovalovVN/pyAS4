@@ -47,21 +47,22 @@ class Header:
     :ivar role: Role URL describing the role of the communicating party.
     """
 
-    def __init__(self,
-                 c1_party_id: str,
-                 c1_party_id_type: str,
-                 c2_party_id: str,
-                 c2_party_id_type: str,
-                 c3_party_id: str,
-                 c3_party_id_type: str,
-                 c4_party_id: str,
-                 c4_party_id_type: str,
-                 conversationid: str | None = None,
-                 service: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/service",  # NOSONAR
-                 service_type: str = "urn:oasis:names:tc:ebcore:ebrs:ebms:binding:1.0",
-                 action: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/action",  # NOSONAR
-                 role: str = "http://sdg.europa.eu/edelivery/gateway"  # NOSONAR
-                 ):
+    def __init__(
+        self,
+        c1_party_id: str,
+        c1_party_id_type: str,
+        c2_party_id: str,
+        c2_party_id_type: str,
+        c3_party_id: str,
+        c3_party_id_type: str,
+        c4_party_id: str,
+        c4_party_id_type: str,
+        conversationid: str | None = None,
+        service: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/service",  # NOSONAR
+        service_type: str = "urn:oasis:names:tc:ebcore:ebrs:ebms:binding:1.0",
+        action: str = "http://docs.oasis-open.org/ebxml-msg/as4/200902/action",  # NOSONAR
+        role: str = "http://sdg.europa.eu/edelivery/gateway",  # NOSONAR
+    ):
         """
         Initializes an instance of the class with required and optional attributes to configure
         a messaging context as per the specified standards. It validates non-None constraints
@@ -91,7 +92,7 @@ class Header:
         if None in (c1_party_id, c2_party_id, c3_party_id, c4_party_id):
             raise ValueError("Parameters must not be None")
 
-        self._xml = etree.Element(_nsmap('eb3', 'Messaging'), nsmap=_NS)
+        self._xml = etree.Element(_nsmap("eb3", "Messaging"), nsmap=_NS)
 
         self.c1_party_id = c1_party_id
         self.c1_party_id_type = c1_party_id_type
@@ -121,45 +122,59 @@ class Header:
         :rtype: etree._Element
         """
 
-        user_message = etree.SubElement(self._xml, _nsmap('eb3', 'UserMessage'))
+        user_message = etree.SubElement(self._xml, _nsmap("eb3", "UserMessage"))
 
-        party_info = etree.SubElement(user_message, _nsmap('eb3', 'PartyInfo'))
-        froms = etree.SubElement(party_info, _nsmap('eb3', 'From'))
-        etree.SubElement(froms, _nsmap('eb3', 'PartyId'),
-                         attrib={'type': self.c2_party_id_type},
-                         ).text = self.c2_party_id
-        etree.SubElement(froms, _nsmap('eb3', 'Role'),
-                         ).text = self.role
+        party_info = etree.SubElement(user_message, _nsmap("eb3", "PartyInfo"))
+        froms = etree.SubElement(party_info, _nsmap("eb3", "From"))
+        etree.SubElement(
+            froms,
+            _nsmap("eb3", "PartyId"),
+            attrib={"type": self.c2_party_id_type},
+        ).text = self.c2_party_id
+        etree.SubElement(
+            froms,
+            _nsmap("eb3", "Role"),
+        ).text = self.role
 
-        to = etree.SubElement(party_info, _nsmap('eb3', 'To'))
-        etree.SubElement(to, _nsmap('eb3', 'PartyId'),
-                         attrib={'type': self.c3_party_id_type},
-                         ).text = self.c3_party_id
-        etree.SubElement(to, _nsmap('eb3', 'Role'),
-                         ).text = self.role
+        to = etree.SubElement(party_info, _nsmap("eb3", "To"))
+        etree.SubElement(
+            to,
+            _nsmap("eb3", "PartyId"),
+            attrib={"type": self.c3_party_id_type},
+        ).text = self.c3_party_id
+        etree.SubElement(
+            to,
+            _nsmap("eb3", "Role"),
+        ).text = self.role
 
-        collaboration_info = etree.SubElement(user_message, _nsmap('eb3', 'CollaborationInfo'))
-        etree.SubElement(collaboration_info, _nsmap('eb3', 'Service'),
-                         type=self.service_type,
-                         ).text = self.service
-        etree.SubElement(collaboration_info, _nsmap('eb3', 'Action'),
-                         ).text = self.action
-        etree.SubElement(collaboration_info, _nsmap('eb3', 'ConversationId'),
-                         ).text = self.conversationid
+        collaboration_info = etree.SubElement(user_message, _nsmap("eb3", "CollaborationInfo"))
+        etree.SubElement(
+            collaboration_info,
+            _nsmap("eb3", "Service"),
+            type=self.service_type,
+        ).text = self.service
+        etree.SubElement(
+            collaboration_info,
+            _nsmap("eb3", "Action"),
+        ).text = self.action
+        etree.SubElement(
+            collaboration_info,
+            _nsmap("eb3", "ConversationId"),
+        ).text = self.conversationid
 
-        message_proportis = etree.SubElement(user_message, _nsmap('eb3', 'MessageProperties'))
-        etree.SubElement(message_proportis, _nsmap('eb3', 'Property'),
-                         attrib={
-                             'name': 'originalSender',
-                             'type': self.c1_party_id_type},
-                         ).text = self.c1_party_id
-        etree.SubElement(message_proportis, _nsmap('eb3', 'Property'),
-                         attrib={
-                             'name': 'finalRecipient',
-                             'type': self.c4_party_id_type},
-                         ).text = self.c4_party_id
+        message_proportis = etree.SubElement(user_message, _nsmap("eb3", "MessageProperties"))
+        etree.SubElement(
+            message_proportis,
+            _nsmap("eb3", "Property"),
+            attrib={"name": "originalSender", "type": self.c1_party_id_type},
+        ).text = self.c1_party_id
+        etree.SubElement(
+            message_proportis,
+            _nsmap("eb3", "Property"),
+            attrib={"name": "finalRecipient", "type": self.c4_party_id_type},
+        ).text = self.c4_party_id
 
-        return etree.SubElement(user_message, _nsmap('eb3', 'PayloadInfo'))
+        return etree.SubElement(user_message, _nsmap("eb3", "PayloadInfo"))
 
     def payload_append(self, payloads: list[dict[str, str]]) -> None:
         """
@@ -176,16 +191,22 @@ class Header:
         :return: None
         """
         for payload in payloads:
-            pl = etree.SubElement(self.pay_load_info, _nsmap('eb3', 'PartInfo'),
-                                  attrib={'href': payload['href']})
-            pp = etree.SubElement(pl, _nsmap('eb3', 'PartProperties'), )
-            etree.SubElement(pp, _nsmap('eb3', 'Property'),
-                             attrib={'name': "MimeType"},
-                             ).text = payload['mimetype']
-            if payload.get('CompressionType', None):
-                etree.SubElement(pp, _nsmap('eb3', 'Property'),
-                                 attrib={'name': "CompressionType"},
-                                 ).text = payload['CompressionType']
+            pl = etree.SubElement(self.pay_load_info, _nsmap("eb3", "PartInfo"), attrib={"href": payload["href"]})
+            pp = etree.SubElement(
+                pl,
+                _nsmap("eb3", "PartProperties"),
+            )
+            etree.SubElement(
+                pp,
+                _nsmap("eb3", "Property"),
+                attrib={"name": "MimeType"},
+            ).text = payload["mimetype"]
+            if payload.get("CompressionType", None):
+                etree.SubElement(
+                    pp,
+                    _nsmap("eb3", "Property"),
+                    attrib={"name": "CompressionType"},
+                ).text = payload["CompressionType"]
 
     @property
     def element(self) -> etree._Element:
@@ -242,13 +263,14 @@ def get_dict_header(source_message) -> dict:
             "action": source_message.CollaborationInfo.Action,
             "conversationId": source_message.CollaborationInfo.ConversationId,
         },
-        "MessageProperties": _proporty(source_message.MessageProperties),
+        "MessageProperties": _proporty(source_message),
         "PayloadInfo": _payload_info(source_message),
     }
     return headers
 
 
 def _payload_info(source_message) -> list:
+    _logger.info("Received %d parts in message", len(source_message.PayloadInfo.PartInfo))
     parts = source_message.PayloadInfo.PartInfo
     if isinstance(parts, list):
         _logger.info("Received %d parts in message", len(parts))
@@ -267,16 +289,26 @@ def _payload_info(source_message) -> list:
     return meta_parts
 
 
-def _proporty(source: list) -> list:
-    if isinstance(source, list):
-        _logger.info("Received %d properties in message", len(source))
+def _proporty(source_message) -> list:
+    propertys = source_message.MessageProperties.Property
+    if isinstance(propertys, list):
+        _logger.info("Received %d properties in message", len(propertys))
     else:
-        source = [source]
+        propertys = [propertys]
         _logger.info("Received a single property in a message, wrapping in lists")
 
     proporty_list: list = []
-    for proporty in source:
-        proporty_list.append({proporty.name: proporty._value_1})
+    for proporty in propertys:
+        if proporty.name in ("originalSender", "finalRecipient"):
+            proporty_list.append(
+                {
+                    proporty.name: proporty._value_1,
+                    "type": proporty.type,
+                }
+            )
+        else:
+            proporty_list.append({proporty.name: proporty._value_1})
+
         _logger.debug("Property name: %s, value: %s", proporty.name, proporty._value_1)
 
     return proporty_list
