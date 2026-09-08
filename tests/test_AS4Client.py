@@ -166,7 +166,18 @@ class TestAS4Send:
         mock_attachment_func.return_value = [mock_attach]
         mock_zeep_client = Mock(spec=Client)
         mock_zeep_client.get_type.return_value = Mock
-        mock_zeep_client.service.submitMessage.return_value = "success"
+
+        def submit_message(*, _soapheaders, payload, bodyload):
+            assert _soapheaders == [header.element]
+            assert len(payload) == 1
+            assert payload[0].payloadId == "cid:test-cid"
+            assert payload[0].value == b"test-cid"
+            assert payload[0].contentType == "text/plain"
+            assert bodyload is None
+            return "success"
+
+        # Reject unexpected keywords just as the WSDL-bound operation does.
+        mock_zeep_client.service.submitMessage.side_effect = submit_message
         mock_client_class.return_value = mock_zeep_client
         client = AS4Send("http://example.com/wsdl", transport, [], header)
         assert client.send_message([{"content": b"test", "content_type": "text/plain"}]) == "success"

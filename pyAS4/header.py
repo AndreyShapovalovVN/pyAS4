@@ -163,6 +163,7 @@ class Header:
         ).text = self.conversationid
 
         message_proportis = etree.SubElement(user_message, _nsmap("eb3", "MessageProperties"))
+        self._message_properties = message_proportis
         etree.SubElement(
             message_proportis,
             _nsmap("eb3", "Property"),
@@ -175,6 +176,21 @@ class Header:
         ).text = self.c4_party_id
 
         return etree.SubElement(user_message, _nsmap("eb3", "PayloadInfo"))
+
+    def add_message_property(self, name: str, value: str, property_type: str | None = None) -> None:
+        """Append a Property to MessageProperties, optionally including its type.
+
+        Existing properties are preserved, including properties with the same name.
+        The value is stored as XML text and escaped during serialization.
+
+        :param name: Property name.
+        :param value: Property text value.
+        :param property_type: Optional XML ``type`` attribute.
+        """
+        attributes = {"name": name}
+        if property_type is not None:
+            attributes["type"] = property_type
+        etree.SubElement(self._message_properties, _nsmap("eb3", "Property"), attrib=attributes).text = value
 
     def payload_append(self, payloads: list[dict[str, str]]) -> None:
         """

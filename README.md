@@ -97,6 +97,10 @@ header = Header(
     action="http://example.eu/actions/submit-evidence",
 )
 
+# Додаткові Property у MessageProperties (type є необов'язковим).
+header.add_message_property("requestId", "request-123")
+header.add_message_property("trackingId", "tracking-456", property_type="urn:example:tracking")
+
 sender = AS4Send(
     wsdl="https://domibus.example.eu/services/backend?wsdl",
     transport=transport,
@@ -365,7 +369,13 @@ EUPL v1.2
 
 ## Поточна версія
 
-0.1.22
+0.1.23
+
+### Зміни у 0.1.23
+
+- Виправлено параметр `submitMessage`: вкладення передаються через `payload` замість `body`.
+- Додано `Header.add_message_property(name, value, property_type=None)` для додавання
+  властивостей у `MessageProperties` з необов'язковим атрибутом `type`.
 
 ## Внески
 

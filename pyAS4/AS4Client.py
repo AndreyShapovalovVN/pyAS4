@@ -228,7 +228,7 @@ class AS4Send(AS4Client):
         try:
             response = self.client.service.submitMessage(
                 _soapheaders=[self.header.element],
-                body=payload_objs,
+                payload=payload_objs,
                 bodyload=bodyload_obj,
             )
         except Fault:
