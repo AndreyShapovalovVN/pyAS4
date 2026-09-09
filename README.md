@@ -190,6 +190,7 @@ for message in receiver.receive_message():
     print(message["messageId"])
     print(message["header"])
     for payload in message["payload"]:
+        print(payload.get("MimeType"))
         print(payload["content"])
 ```
 
@@ -215,6 +216,16 @@ receiver = AS4Receive(
         "header": dict,
         "payload": list[dict[str, str]],
     }
+
+Кожен елемент `payload` містить копію метаданих відповідної частини з
+`header["PayloadInfo"]` та поле `content` — вміст, декодований як UTF-8.
+`MimeType` та інші властивості `PartInfo` (наприклад, `CharacterSet` або `FileName`)
+зберігаються і в заголовку, і в отриманому payload, якщо вони були передані у повідомленні.
+
+Частини зіставляються за `href` і `payloadId`, з видаленням зовнішніх подвійних лапок у `href`.
+Результат має порядок `PayloadInfo`, незалежно від порядку вкладень у тілі.
+Підтримуються одиничний payload і список payload; частини без відповідного вкладення
+або з порожнім вмістом пропускаються. Вхідні структури заголовка й тіла не змінюються.
 
 #### Приклад реального отриманого повідомлення
 
@@ -268,6 +279,7 @@ messages = [
         "payload": [
             {
                 "href": "cid:ootsPayload@er.oots.eu",
+                "MimeType": "application/x-ebrs+xml",
                 "content": """\
 <query:QueryRequest
     xmlns:query="urn:oasis:names:tc:ebxml-regrep:xsd:query:4.0"
@@ -300,8 +312,8 @@ messages = [
 Це Python-структура, а не готовий JSON: поле `timestamp` містить
 `datetime.datetime`. Перед серіалізацією в JSON його потрібно перетворити, наприклад, через `timestamp.isoformat()`.
 Повний XML payload доступний у
-`message["payload"][0]["content"]`; MIME-тип відповідного вкладення знаходиться в `message["header"]["PayloadInfo"]` за
-тим самим `href`.
+`message["payload"][0]["content"]`; MIME-тип доступний у `message["payload"][0]["MimeType"]` і також залишається
+в `message["header"]["PayloadInfo"]` за тим самим `href`.
 
 SOAP Fault під час отримання списку pending messages передається користувачу. Помилки завантаження окремих повідомлень
 логуються, після чого генератор переходить до наступного повідомлення.
@@ -369,7 +381,16 @@ EUPL v1.2
 
 ## Поточна версія
 
-0.1.23
+0.1.24
+
+### Зміни у 0.1.24
+
+- Виправлено втрату `MimeType` та інших властивостей `PartInfo` під час отримання повідомлень:
+  `get_payload()` копіює метадані з `header["PayloadInfo"]` і додає відповідний `content`.
+- Збережено підтримку одиничного та множинних payload, нормалізацію лапок у `href`,
+  порядок частин заголовка й пропуск частин без вмісту без зміни вхідних структур.
+- Додано регресійні тести для ланцюжка `_payload_info()` → `get_payload()`,
+  різних MIME-типів, порядку вкладень і додаткових властивостей.
 
 ### Зміни у 0.1.23
 

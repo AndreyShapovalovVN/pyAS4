@@ -1,7 +1,9 @@
 # pyrefly: ignore [missing-import]
 
 import base64
+from copy import deepcopy
 from io import BytesIO
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import pytest
@@ -10,7 +12,7 @@ from zeep import Client
 from zeep.exceptions import Fault
 
 from pyAS4.AS4Client import AS4Client, AS4Receive, AS4Send, Payload, _norm_cid, _open_io, attachment, get_payload
-from pyAS4.header import Header
+from pyAS4.header import Header, _payload_info
 
 
 class TestOpenIO:
@@ -82,33 +84,86 @@ class TestAttachment:
 
 
 class TestGetPayload:
-    def test_get_payload_single_payload(self):
-        user_message = {"PayloadInfo": [{"href": "cid:payload-1", "PartProperties": {"Property": []}}]}
-        mock_payload = Mock()
-        mock_payload.payloadId = "cid:payload-1"
-        mock_payload.value = b"test payload content"
-        body = Mock()
-        body.payload = mock_payload
-        result = get_payload(user_message, body)
-        assert result == [{"href": "cid:payload-1", "content": "test payload content"}]
+    @pytest.mark.parametrize("multiple", [False, True])
+    def test_payload_info_metadata_survives_get_payload(self, multiple):
+        parts = [
+            SimpleNamespace(
+                href='"cid:xml"',
+                PartProperties=SimpleNamespace(Property=[
+                    SimpleNamespace(name="MimeType", _value_1="application/xml"),
+                    SimpleNamespace(name="CharacterSet", _value_1="UTF-8"),
+                    SimpleNamespace(name="Description", _value_1="Evidence"),
+                ]),
+            ),
+        ]
+        payloads = [SimpleNamespace(payloadId="cid:xml", value=b"<evidence/>")]
+        expected = [{
+            "href": "cid:xml",
+            "MimeType": "application/xml",
+            "CharacterSet": "UTF-8",
+            "Description": "Evidence",
+            "content": "<evidence/>",
+        }]
+        if multiple:
+            parts.append(SimpleNamespace(
+                href="cid:json",
+                PartProperties=SimpleNamespace(Property=[
+                    SimpleNamespace(name="MimeType", _value_1="application/json"),
+                    SimpleNamespace(name="FileName", _value_1="evidence.json"),
+                ]),
+            ))
+            payloads.insert(0, SimpleNamespace(payloadId="cid:json", value=b'{"id": 1}'))
+            expected.append({
+                "href": "cid:json",
+                "MimeType": "application/json",
+                "FileName": "evidence.json",
+                "content": '{"id": 1}',
+            })
+        source = SimpleNamespace(PayloadInfo=SimpleNamespace(PartInfo=parts))
+        source_before = deepcopy(source)
+        header = {"PayloadInfo": _payload_info(source)}
+        header_before = deepcopy(header)
+        body = SimpleNamespace(payload=payloads if multiple else payloads[0])
+        body_before = deepcopy(body)
 
-    def test_get_payload_multiple_payloads(self):
-        user_message = {
-            "PayloadInfo": [
-                {"href": "cid:payload-1", "PartProperties": {"Property": []}},
-                {"href": "cid:payload-2", "PartProperties": {"Property": []}},
-            ]
-        }
-        mock_payload1 = Mock()
-        mock_payload1.payloadId = "cid:payload-1"
-        mock_payload1.value = b"content 1"
-        mock_payload2 = Mock()
-        mock_payload2.payloadId = "cid:payload-2"
-        mock_payload2.value = b"content 2"
-        body = Mock()
-        body.payload = [mock_payload1, mock_payload2]
-        result = get_payload(user_message, body)
-        assert len(result) == 2
+        result = get_payload(header, body)
+
+        assert result == expected
+        assert source == source_before
+        assert header == header_before
+        assert body == body_before
+        for metadata, received in zip(header["PayloadInfo"], result):
+            assert received is not metadata
+            assert received["MimeType"] == metadata["MimeType"]
+            assert "content" not in metadata
+
+    def test_get_payload_normalizes_quotes_without_mutating_metadata(self):
+        header = {"PayloadInfo": [{"href": '"cid:1"', "MimeType": "text/plain", "custom": "value"}]}
+        before = deepcopy(header)
+        body = SimpleNamespace(payload=SimpleNamespace(payloadId="cid:1", value=b"text"))
+
+        assert get_payload(header, body) == [
+            {"href": "cid:1", "MimeType": "text/plain", "custom": "value", "content": "text"}
+        ]
+        assert header == before
+
+    def test_get_payload_skips_missing_and_empty_content(self):
+        header = {"PayloadInfo": [
+            {"href": "cid:missing", "MimeType": "application/xml"},
+            {"href": "cid:empty", "MimeType": "text/plain"},
+            {"href": "cid:present", "MimeType": "application/json"},
+        ]}
+        before = deepcopy(header)
+        body = SimpleNamespace(payload=[
+            SimpleNamespace(payloadId="cid:empty", value=b""),
+            SimpleNamespace(payloadId="cid:present", value=b"{}"),
+            SimpleNamespace(payloadId="cid:unmatched", value=b"extra"),
+        ])
+
+        assert get_payload(header, body) == [
+            {"href": "cid:present", "MimeType": "application/json", "content": "{}"}
+        ]
+        assert header == before
 
 
 class TestAS4Client:

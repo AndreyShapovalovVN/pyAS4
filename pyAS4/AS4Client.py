@@ -97,13 +97,12 @@ def get_payload(user_message: dict[str, Any], body: Any) -> list[dict[str, str]]
 
     meta_parts = []
     for part in user_message.get("PayloadInfo", []):
-        m = {"href": part.get("href", "").strip('"')}
-
-        for proporty in part.get("PartProperties", {}).get("Property", []):
-            m.update({proporty.get("name"): proporty.get("_value_1")})
+        # PayloadInfo already contains the flattened PartInfo metadata.
+        m = dict(part)
+        m["href"] = part.get("href", "").strip('"')
 
         for payload in payloads:
-            if payload.payloadId == part.get("href", "").strip('"'):
+            if payload.payloadId == m["href"]:
                 m.update({"content": payload.value.decode()})
         if not m.get("content"):
             _logger.error("Part %s has no content, skipping", part.get("href", ""))
