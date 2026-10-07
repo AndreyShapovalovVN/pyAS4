@@ -230,8 +230,8 @@ class AS4Send(AS4Client):
                 payload=payload_objs,
                 bodyload=bodyload_obj,
             )
-        except Fault:
-            _logger.exception("SOAP Fault occurred while sending message")
+        except Fault as fault:
+            _logger.exception("Fault code: %s, Fault string: %s", fault.code, fault.detail)
             raise
         except Exception:
             _logger.exception("Error sending message")
@@ -270,10 +270,10 @@ class AS4Receive(AS4Client):
             if self.client is None:
                 raise RuntimeError("Client not initialized")
             response = self.client.service.listPendingMessages(finalRecipient=self.c4_party_id)
-            _logger.info("Received %d pending messages", len(response))
+            _logger.debug("Received %d pending messages", len(response))
             return response
-        except Fault:
-            _logger.exception("SOAP Fault occurred")
+        except Fault as fault:
+            _logger.exception("Fault code: %s, Fault string: %s", fault.code, fault.detail)
             raise
         except Exception:
             _logger.exception("Error receiving message")
@@ -291,8 +291,8 @@ class AS4Receive(AS4Client):
                 if self.client is None:
                     raise RuntimeError("Client not initialized")
                 retrieved = self.client.service.retrieveMessage(messageID=message_id)
-            except Fault:
-                _logger.exception("SOAP Fault occurred while retrieving message %s", message_id)
+            except Fault as fault:
+                _logger.exception("Fault code: %s, Fault string: %s", fault.code, fault.detail)
                 continue
             except Exception:
                 _logger.exception("Error retrieving message %s", message_id)
@@ -307,4 +307,4 @@ class AS4Receive(AS4Client):
 
             _logger.debug("Retrieved message %s", message_id)
             yield message
-        _logger.info("No more messages to retrieve")
+        _logger.debug("No more messages to retrieve")
